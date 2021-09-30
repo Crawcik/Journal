@@ -1,0 +1,26 @@
+# Flax Engine
+Binaries/
+Cache/
+Logs/
+Output/
+Screenshots/
+Source/*.csproj
+*.HotReload.*
+
+# Visual Studio files
+.vs/
+*.sln
+*.sln.docstates
+*.suo
+*.user
+
+# Visual Studio Code files
+*.vcxproj.filters
+.vscode/
+.history/
+*.code-workspace
+
+#IDE files
+packages/
+bin/
+obj/
