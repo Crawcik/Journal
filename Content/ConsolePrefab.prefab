@@ -1,0 +1,133 @@
+{
+	"ID": "025e86bc4fc2337e87a1019ffa39b253",
+	"TypeName": "FlaxEngine.Prefab",
+	"EngineBuild": 6225,
+	"Data": [
+	{
+		"ID": "c564871a47080baf62bf9db6dc2239f1",
+		"TypeName": "FlaxEngine.UICanvas",
+		"ParentID": "00000000000000000000000000000000",
+		"Name": "Console",
+		"Transform": {
+			"Orientation": {
+				"X": 1.0,
+				"Y": 4.3711388286737938e-8,
+				"Z": 4.3711388286737938e-8,
+				"W": 1.910685465164705e-15
+			}
+		},
+		"V": {}
+	},
+	{
+		"ID": "e58a79494f5ac15a7a923ca91a49359e",
+		"TypeName": "FlaxEngine.UIControl",
+		"ParentID": "c564871a47080baf62bf9db6dc2239f1",
+		"Name": "Border",
+		"Control": "FlaxEngine.GUI.Border",
+		"Data": {
+			"BorderColor": {
+				"R": 0.329411775,
+				"G": 0.329411775,
+				"B": 0.360784322,
+				"A": 1.0
+			},
+			"BorderWidth": 5.0,
+			"ClipChildren": true,
+			"CullChildren": true,
+			"AnchorMin": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"AnchorMax": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Offsets": {
+				"Left": 0.0,
+				"Right": 1000.0,
+				"Top": 0.0,
+				"Bottom": 300.0
+			},
+			"Scale": {
+				"X": 1.0,
+				"Y": 1.0
+			},
+			"Pivot": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Shear": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Rotation": 0.0,
+			"BackgroundColor": {
+				"R": 0.0,
+				"G": 0.0,
+				"B": 0.0,
+				"A": 0.0
+			},
+			"Enabled": true,
+			"Visible": true
+		}
+	},
+	{
+		"ID": "f9482b07445a7c9ea995169d1fa02966",
+		"TypeName": "FlaxEngine.UIControl",
+		"ParentID": "c564871a47080baf62bf9db6dc2239f1",
+		"Name": "VerticalPanel",
+		"Control": "FlaxEngine.GUI.VerticalPanel",
+		"Data": {
+			"Spacing": 2.0,
+			"Offset": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"AutoSize": false,
+			"Margin": {
+				"Left": 2.0,
+				"Right": 2.0,
+				"Top": 2.0,
+				"Bottom": 2.0
+			},
+			"ClipChildren": true,
+			"CullChildren": true,
+			"AnchorMin": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"AnchorMax": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Offsets": {
+				"Left": 0.0,
+				"Right": 1000.0,
+				"Top": 0.0,
+				"Bottom": 240.0
+			},
+			"Scale": {
+				"X": 1.0,
+				"Y": 1.0
+			},
+			"Pivot": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Shear": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Rotation": 0.0,
+			"BackgroundColor": {
+				"R": 0.1,
+				"G": 0.1,
+				"B": 0.1,
+				"A": 0.7
+			},
+			"Enabled": true,
+			"Visible": true
+		}
+	}
+]
+}
