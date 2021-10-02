@@ -1,10 +1,10 @@
 {
-	"ID": "025e86bc4fc2337e87a1019ffa39b253",
+	"ID": "51e5a50e4bfb8c4e2d9fb3a0a5353e73",
 	"TypeName": "FlaxEngine.Prefab",
 	"EngineBuild": 6225,
 	"Data": [
 	{
-		"ID": "c564871a47080baf62bf9db6dc2239f1",
+		"ID": "c38f93ab432eed1c249d81843f708001",
 		"TypeName": "FlaxEngine.UICanvas",
 		"ParentID": "00000000000000000000000000000000",
 		"Name": "Console",
@@ -19,19 +19,142 @@
 		"V": {}
 	},
 	{
-		"ID": "e58a79494f5ac15a7a923ca91a49359e",
+		"ID": "6c70613c48f3bb0c1583218ebe719dfd",
+		"TypeName": "Journal.ConsoleMap",
+		"ParentID": "c38f93ab432eed1c249d81843f708001",
+		"V": {
+			"InputTextBox": "902ce8b549cc79630e308e966d307c2a",
+			"OutputPanel": "e5e19d3e4689a287ed77b1926d4e4af9"
+		}
+	},
+	{
+		"ID": "902ce8b549cc79630e308e966d307c2a",
 		"TypeName": "FlaxEngine.UIControl",
-		"ParentID": "c564871a47080baf62bf9db6dc2239f1",
-		"Name": "Border",
-		"Control": "FlaxEngine.GUI.Border",
+		"ParentID": "c38f93ab432eed1c249d81843f708001",
+		"Name": "Input",
+		"Transform": {
+			"Translation": {
+				"X": 2.004449134250815e-19,
+				"Y": 300.0,
+				"Z": 0.0
+			}
+		},
+		"Control": "FlaxEngine.GUI.TextBox",
 		"Data": {
-			"BorderColor": {
-				"R": 0.329411775,
-				"G": 0.329411775,
-				"B": 0.360784322,
+			"WatermarkText": null,
+			"Wrapping": 0,
+			"Font": {
+				"Font": "4508d98f4aa1f0bd59362b81d47e38f4",
+				"Size": 16
+			},
+			"TextMaterial": null,
+			"TextColor": {
+				"R": 1.0,
+				"G": 1.0,
+				"B": 1.0,
 				"A": 1.0
 			},
-			"BorderWidth": 5.0,
+			"WatermarkTextColor": {
+				"R": 0.470588237,
+				"G": 0.470588237,
+				"B": 0.5137255,
+				"A": 1.0
+			},
+			"SelectionColor": {
+				"R": 0.0,
+				"G": 0.478431374,
+				"B": 0.8,
+				"A": 1.0
+			},
+			"IsMultiline": false,
+			"MaxLength": 300,
+			"IsReadOnly": false,
+			"BackgroundSelectedColor": {
+				"R": 0.247058824,
+				"G": 0.247058824,
+				"B": 0.274509817,
+				"A": 1.0
+			},
+			"CaretColor": {
+				"R": 1.0,
+				"G": 1.0,
+				"B": 1.0,
+				"A": 1.0
+			},
+			"CaretFlashSpeed": 6.0,
+			"BackgroundSelectedFlashSpeed": 6.0,
+			"BorderColor": {
+				"R": 0.00100004673,
+				"G": 0.000111046851,
+				"B": 0.000121657693,
+				"A": 0.0
+			},
+			"BorderSelectedColor": {
+				"R": 0.0,
+				"G": 0.478431374,
+				"B": 0.8,
+				"A": 1.0
+			},
+			"Text": ">_",
+			"SelectionRange": {
+				"StartIndex": -1,
+				"EndIndex": -1
+			},
+			"ClipChildren": true,
+			"CullChildren": true,
+			"AnchorMin": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"AnchorMax": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Offsets": {
+				"Left": 0.0,
+				"Right": 1000.0,
+				"Top": 300.0,
+				"Bottom": 20.0
+			},
+			"Scale": {
+				"X": 1.0,
+				"Y": 1.0
+			},
+			"Pivot": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Shear": {
+				"X": 0.0,
+				"Y": 0.0
+			},
+			"Rotation": 0.0,
+			"BackgroundColor": {
+				"R": 0.2,
+				"G": 0.2,
+				"B": 0.215686277,
+				"A": 1.0
+			},
+			"Enabled": true,
+			"Visible": true
+		}
+	},
+	{
+		"ID": "e5e19d3e4689a287ed77b1926d4e4af9",
+		"TypeName": "FlaxEngine.UIControl",
+		"ParentID": "c38f93ab432eed1c249d81843f708001",
+		"Name": "Panel",
+		"Control": "FlaxEngine.GUI.Panel",
+		"Data": {
+			"ScrollBars": 3,
+			"ScrollBarsSize": 0.0,
+			"AlwaysShowScrollbars": false,
+			"ScrollMargin": {
+				"Left": 0.0,
+				"Right": 0.0,
+				"Top": 0.0,
+				"Bottom": 0.0
+			},
 			"ClipChildren": true,
 			"CullChildren": true,
 			"AnchorMin": {
@@ -62,67 +185,9 @@
 			},
 			"Rotation": 0.0,
 			"BackgroundColor": {
-				"R": 0.0,
-				"G": 0.0,
-				"B": 0.0,
-				"A": 0.0
-			},
-			"Enabled": true,
-			"Visible": true
-		}
-	},
-	{
-		"ID": "f9482b07445a7c9ea995169d1fa02966",
-		"TypeName": "FlaxEngine.UIControl",
-		"ParentID": "c564871a47080baf62bf9db6dc2239f1",
-		"Name": "VerticalPanel",
-		"Control": "FlaxEngine.GUI.VerticalPanel",
-		"Data": {
-			"Spacing": 2.0,
-			"Offset": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"AutoSize": false,
-			"Margin": {
-				"Left": 2.0,
-				"Right": 2.0,
-				"Top": 2.0,
-				"Bottom": 2.0
-			},
-			"ClipChildren": true,
-			"CullChildren": true,
-			"AnchorMin": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"AnchorMax": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Offsets": {
-				"Left": 0.0,
-				"Right": 1000.0,
-				"Top": 0.0,
-				"Bottom": 240.0
-			},
-			"Scale": {
-				"X": 1.0,
-				"Y": 1.0
-			},
-			"Pivot": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Shear": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Rotation": 0.0,
-			"BackgroundColor": {
-				"R": 0.1,
-				"G": 0.1,
-				"B": 0.1,
+				"R": 0.2,
+				"G": 0.2,
+				"B": 0.2,
 				"A": 0.7
 			},
 			"Enabled": true,
