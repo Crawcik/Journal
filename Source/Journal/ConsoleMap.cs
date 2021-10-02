@@ -27,6 +27,7 @@ namespace Journal
         private Vector2 _currentScreenSize;
         private float _consoleHeight = 0.4f;
         private int _uiScale = 2;
+        private float _lastAnimationTime;
         #endregion
 
         #region Properties
@@ -64,9 +65,21 @@ namespace Journal
                 Enabled = false;
                 return;
             }
+            _inputTextBox.EditEnd += OnEditEnd;
             Realign();
         }
 
+        private void OnEditEnd()
+        {
+            if (Input.GetKeyDown(KeyboardKeys.Return))
+            {
+                Debug.Log("Command NOW!");
+                _inputTextBox.SetText(">");
+            }
+        }
+        /// <summary>
+        /// Aligning all UI elements
+        /// </summary>
         public void Realign()
         {
             float containerHeight = _currentScreenSize.Y * _consoleHeight;
@@ -89,11 +102,38 @@ namespace Journal
         public override void OnLateUpdate()
         {
             Vector2 screenSize = Screen.Size;
-            if(screenSize != _currentScreenSize)
+            string text = _inputTextBox.Text.Trim();
+            _lastAnimationTime += Time.DeltaTime;
+            if (screenSize != _currentScreenSize)
             {
                 _currentScreenSize = screenSize;
                 Realign();
             }
+            if (_lastAnimationTime >= 1f)
+            {
+                _lastAnimationTime -= 1f;
+
+                //Console waiting animation
+                if (text == ">" || text == string.Empty)
+                    _inputTextBox.Text = ">_";
+                else if (text == ">_")
+                    _inputTextBox.Text = ">";
+            }
+            if (_inputTextBox.IsEditing)
+            {
+                if (_inputTextBox.Text == ">_")
+                    _inputTextBox.SetText(">");
+
+                //Checking if '>' wasn't removed
+                if (text.Length == 0 || text[0] != '>')
+                {
+                    text = text.TrimStart();
+                    text = text.TrimEnd('>');
+                    _inputTextBox.SetText(">" + text);
+                    _inputTextBox.SelectionRange = new TextRange(text.Length + 1, text.Length + 1);
+                }
+            }
+
         }
     }
 }
