@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using FlaxEngine;
 
 namespace Journal
@@ -7,7 +6,7 @@ namespace Journal
     /// <summary>
 	/// Journal plugin.
 	/// </summary>
-	public class MyPlugin : GamePlugin
+	internal class PluginInfo : GamePlugin
     {
 		/// <inheritdoc />
 		public override PluginDescription Description => new PluginDescription

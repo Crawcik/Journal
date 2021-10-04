@@ -1,6 +1,6 @@
 using Flax.Build;
-using Flax.Build.NativeCpp;
 
+/// <inheritdoc />
 public class Journal : GameModule
 {
     /// <inheritdoc />
@@ -8,12 +8,5 @@ public class Journal : GameModule
     {
         base.Init();
         BuildNativeCode = false;
-    }
-
-    /// <inheritdoc />
-    public override void Setup(BuildOptions options)
-    {
-        base.Setup(options);
-        options.ScriptingAPI.IgnoreMissingDocumentationWarnings = true;
     }
 }
