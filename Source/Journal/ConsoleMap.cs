@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using FlaxEngine;
+﻿using FlaxEngine;
 using FlaxEngine.GUI;
 
 namespace Journal
@@ -51,8 +49,11 @@ namespace Journal
                 Realign();
             }
         }
+        public float PanelWidth { get; private set; }
+        public int FontSize { get; private set; }
         #endregion
 
+        #region Methods
         /// <inheritdoc/>
         public override void OnAwake()
         {
@@ -67,35 +68,6 @@ namespace Journal
             }
             _inputTextBox.EditEnd += OnEditEnd;
             Realign();
-        }
-
-        private void OnEditEnd()
-        {
-            if (Input.GetKeyDown(KeyboardKeys.Return))
-            {
-                Debug.Log("Command NOW!");
-                _inputTextBox.SetText(">");
-            }
-        }
-        /// <summary>
-        /// Aligning all UI elements
-        /// </summary>
-        public void Realign()
-        {
-            float containerHeight = _currentScreenSize.Y * _consoleHeight;
-            float inputHeight = _baseInputHeight * _uiScale;
-            float outputHeight = containerHeight - inputHeight;
-            int fontSize = _baseFontSize * _uiScale;
-
-            _inputTextBox.X = 0f;
-            _inputTextBox.Y = outputHeight;
-            _inputTextBox.Width = _currentScreenSize.X;
-            _inputTextBox.Height = inputHeight;
-            _inputTextBox.Font.Size = fontSize;
-            _outputPanel.X = 0f;
-            _outputPanel.Y = 0f;
-            _outputPanel.Width = _currentScreenSize.X;
-            _outputPanel.Height = outputHeight;
         }
 
         /// <inheritdoc/>
@@ -133,7 +105,40 @@ namespace Journal
                     _inputTextBox.SelectionRange = new TextRange(text.Length + 1, text.Length + 1);
                 }
             }
-
         }
+
+        /// <summary>
+        /// Aligning all UI elements
+        /// </summary>
+        public void Realign()
+        {
+            float containerHeight = _currentScreenSize.Y * _consoleHeight;
+            float inputHeight = _baseInputHeight * _uiScale;
+            float outputHeight = containerHeight - inputHeight;
+            int fontSize = _baseFontSize * _uiScale;
+
+            _inputTextBox.X = 0f;
+            _inputTextBox.Y = outputHeight;
+            _inputTextBox.Width = _currentScreenSize.X;
+            _inputTextBox.Height = inputHeight;
+            _inputTextBox.Font.Size = fontSize;
+            _outputPanel.X = 0f;
+            _outputPanel.Y = 0f;
+            _outputPanel.Width = _currentScreenSize.X;
+            _outputPanel.Height = outputHeight;
+
+            PanelWidth = _currentScreenSize.X;
+            FontSize = fontSize;
+        }
+
+        private void OnEditEnd()
+        {
+            if (Input.GetKeyDown(KeyboardKeys.Return))
+            {
+                Debug.Log("Command NOW!");
+                _inputTextBox.SetText(">");
+            }
+        }
+        #endregion
     }
 }
