@@ -22,11 +22,13 @@ namespace Journal
         {
             if (_uiElement is object && parent is null)
                 return;
-            Label = new Label()
+            Label = new Label(0f, 0f, width, 0f)
             {
                 Text = new LocalizedString(Text),
-                Width = width,
+                HorizontalAlignment = TextAlignment.Near,
+                VerticalAlignment = TextAlignment.Center,
                 AutoHeight = true,
+                Margin = new Margin(3f),
                 AutoFitText = false,
                 Pivot = new Vector2(0f, 0f),
                 BackgroundColor = new Color(0, 0, 0, 40)

@@ -110,8 +110,13 @@ namespace Journal
                     _last += log.Label.Height + 2f;
                 }
             }
+            else
+            {
+                ConsoleMap.Scroll = _last;
+            }
         }
 
+        //Destroys all logs created by Object.New<T> to minimalize crash propability 
         private void Dispose()
         {
             Debug.Logger.LogHandler.SendLog -= OnDebugLog;

@@ -10,6 +10,7 @@ namespace Journal
     {
         #region Constants
         private const float _baseInputHeight = 10f;
+        private const float _baseScrollWidth = 20f;
         private const int _baseFontSize = 5;
         #endregion
 
@@ -26,6 +27,7 @@ namespace Journal
         private float _consoleHeight = 0.4f;
         private int _uiScale = 2;
         private float _lastAnimationTime;
+        private float? _scrollTo;
         #endregion
 
         #region Properties
@@ -49,6 +51,12 @@ namespace Journal
                 Realign();
             }
         }
+        [HideInEditor, NoSerialize]
+        public float Scroll
+        {
+            get => _outputPanel.VScrollBar.Value;
+            set => _scrollTo = value;
+        }
         public float PanelWidth { get; private set; }
         public int FontSize { get; private set; }
         #endregion
@@ -57,7 +65,6 @@ namespace Journal
         /// <inheritdoc/>
         public override void OnAwake()
         {
-            _currentScreenSize = Screen.Size;
             _inputTextBox = InputTextBox?.Control as TextBox;
             _outputPanel = OutputPanel?.Control as Panel;
             if (_inputTextBox is null || _outputPanel is null)
@@ -66,8 +73,19 @@ namespace Journal
                 Enabled = false;
                 return;
             }
+            _currentScreenSize = Screen.Size;
+            _scrollTo = null;
             _inputTextBox.EditEnd += OnEditEnd;
+            _outputPanel.VScrollBar.SizeChanged += VScrollBar_SizeChanged;
             Realign();
+        }
+
+        private void VScrollBar_SizeChanged(Control obj)
+        {
+            if (!_scrollTo.HasValue)
+                return;
+            _outputPanel.VScrollBar.Value = _scrollTo.Value;
+            _scrollTo = null;
         }
 
         /// <inheritdoc/>
