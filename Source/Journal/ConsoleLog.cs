@@ -3,7 +3,7 @@ using FlaxEngine.GUI;
 
 namespace Journal
 {
-    internal class ConsoleLog
+    public class ConsoleLog
     {
         #region Fields
         public readonly string Text;

@@ -15,9 +15,6 @@ namespace Journal
         public UICanvas ConsoleActor;
         [EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", false)]
         public Prefab ConsolePrefab;
-        public byte MaxConsoleLogLength = 200;
-        private Queue<ConsoleLog> _logs;
-        private float _last = 0f;
         #endregion
 
         #region Properties
@@ -41,7 +38,6 @@ namespace Journal
                 return;
             }
             Singleton = this;
-            _logs = new Queue<ConsoleLog>(MaxConsoleLogLength);
             Debug.Logger.LogHandler.SendLog += OnDebugLog;
 #if FLAX_EDITOR
             FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored += Dispose;
@@ -93,44 +89,17 @@ namespace Journal
             return true;
         }
 
-        //TODO: Find better way of handling logs (by that I mean not repositioning them after max amount reached)
-        private void AddLog(ConsoleLog newLog)
-        {
-            newLog.Spawn(ConsoleMap.OutputPanel, ConsoleMap.PanelWidth, _last, ConsoleMap.FontSize);
-            _logs.Enqueue(newLog);
-            _last += newLog.Label.Height + 2f;
-            if (_logs.Count > MaxConsoleLogLength)
-            {
-                ConsoleLog oldLog = _logs.Dequeue();
-                oldLog.Destroy();
-                _last = 0f;
-                foreach (ConsoleLog log in _logs)
-                {
-                    log.Label.LocalY = _last;
-                    _last += log.Label.Height + 2f;
-                }
-            }
-            else
-            {
-                ConsoleMap.Scroll = _last;
-            }
-        }
-
         //Destroys all logs created by Object.New<T> to minimalize crash propability 
         private void Dispose()
         {
             Debug.Logger.LogHandler.SendLog -= OnDebugLog;
-            while (_logs.Count > 0)
-                _logs.Dequeue().Destroy();
+            ConsoleMap.Clear();
 #if FLAX_EDITOR
             FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored -= Dispose;
 #endif
         }
 
-        private void OnDebugLog(LogType level, string msg, Object obj, string stackTrace)
-        {
-            AddLog(new ConsoleLog(msg));
-        }
+        private void OnDebugLog(LogType level, string msg, Object obj, string stackTrace) => ConsoleMap.AddLog(new ConsoleLog(msg));
         #endregion
     }
 }
