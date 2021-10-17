@@ -55,6 +55,12 @@ namespace Journal
                 Realign();
             }
         }
+        [HideInEditor, NoSerialize]
+        public float ScrollPosition 
+        {
+            get => -_outputPanel.ViewOffset.Y;
+            set => _outputPanel.ViewOffset = new Vector2(0f, -value);
+        }
         public float PanelWidth => _outputPanel.Width;
         public int FontSize { get; private set; }
         #endregion
@@ -99,10 +105,6 @@ namespace Journal
                     _inputTextBox.Text = ">_";
                 else if (text == ">_")
                     _inputTextBox.Text = ">";
-            }
-            if (Input.GetKeyDown(KeyboardKeys.H))
-            {
-                //Debug.Log(Scroll);
             }
             if (_inputTextBox.IsEditing)
             {
@@ -163,6 +165,14 @@ namespace Journal
                 oldLog.Destroy();
                 RealignLogs();
             }
+            float pos = _last - _outputPanel.Height;
+            if(ScrollPosition < pos)
+                ScrollPosition = pos;
+        }
+
+        private void RealignScrollBar()
+        {
+
         }
 
         private void RealignLogs(bool widthChange = false)

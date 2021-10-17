@@ -6,13 +6,12 @@
 	{
 		"ID": "c38f93ab432eed1c249d81843f708001",
 		"TypeName": "FlaxEngine.UICanvas",
-		"ParentID": "00000000000000000000000000000000",
 		"Name": "Console",
 		"Transform": {
 			"Orientation": {
 				"X": 1.0,
-				"Y": 4.3711388286737938e-8,
-				"Z": 4.3711388286737938e-8,
+				"Y": 4.371138828673793e-8,
+				"Z": 4.371138828673793e-8,
 				"W": 1.910685465164705e-15
 			}
 		},
@@ -23,9 +22,10 @@
 		"TypeName": "Journal.ConsoleMap",
 		"ParentID": "c38f93ab432eed1c249d81843f708001",
 		"V": {
-			"InputTextBox": "902ce8b549cc79630e308e966d307c2a",
-			"OutputPanel": "e5e19d3e4689a287ed77b1926d4e4af9"
-		}
+	"InputTextBox": "902ce8b549cc79630e308e966d307c2a",
+	"OutputPanel": "e5e19d3e4689a287ed77b1926d4e4af9",
+	"ScrollBar": "f1101ec548320c8d8dad56a950e463b3"
+}
 	},
 	{
 		"ID": "902ce8b549cc79630e308e966d307c2a",
@@ -34,110 +34,110 @@
 		"Name": "Input",
 		"Transform": {
 			"Translation": {
-				"X": 2.004449134250815e-19,
+				"X": 2.0044491342508147e-19,
 				"Y": 300.0,
 				"Z": 0.0
 			}
 		},
 		"Control": "FlaxEngine.GUI.TextBox",
 		"Data": {
-			"WatermarkText": null,
-			"Wrapping": 0,
-			"Font": {
-				"Font": "4508d98f4aa1f0bd59362b81d47e38f4",
-				"Size": 16
-			},
-			"TextMaterial": null,
-			"TextColor": {
-				"R": 1.0,
-				"G": 1.0,
-				"B": 1.0,
-				"A": 1.0
-			},
-			"WatermarkTextColor": {
-				"R": 0.470588237,
-				"G": 0.470588237,
-				"B": 0.5137255,
-				"A": 1.0
-			},
-			"SelectionColor": {
-				"R": 0.0,
-				"G": 0.478431374,
-				"B": 0.8,
-				"A": 1.0
-			},
-			"IsMultiline": false,
-			"MaxLength": 300,
-			"IsReadOnly": false,
-			"BackgroundSelectedColor": {
-				"R": 0.247058824,
-				"G": 0.247058824,
-				"B": 0.274509817,
-				"A": 1.0
-			},
-			"CaretColor": {
-				"R": 1.0,
-				"G": 1.0,
-				"B": 1.0,
-				"A": 1.0
-			},
-			"CaretFlashSpeed": 6.0,
-			"BackgroundSelectedFlashSpeed": 6.0,
-			"BorderColor": {
-				"R": 0.00100004673,
-				"G": 0.000111046851,
-				"B": 0.000121657693,
-				"A": 0.0
-			},
-			"BorderSelectedColor": {
-				"R": 0.0,
-				"G": 0.478431374,
-				"B": 0.8,
-				"A": 1.0
-			},
-			"Text": ">_",
-			"SelectionRange": {
-				"StartIndex": -1,
-				"EndIndex": -1
-			},
-			"ClipChildren": true,
-			"CullChildren": true,
-			"AnchorMin": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"AnchorMax": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Offsets": {
-				"Left": 0.0,
-				"Right": 1000.0,
-				"Top": 300.0,
-				"Bottom": 20.0
-			},
-			"Scale": {
-				"X": 1.0,
-				"Y": 1.0
-			},
-			"Pivot": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Shear": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Rotation": 0.0,
-			"BackgroundColor": {
-				"R": 0.2,
-				"G": 0.2,
-				"B": 0.215686277,
-				"A": 1.0
-			},
-			"Enabled": true,
-			"Visible": true
-		}
+	"WatermarkText": null,
+	"Wrapping": 0,
+	"Font": {
+		"Font": "4508d98f4aa1f0bd59362b81d47e38f4",
+		"Size": 16
+	},
+	"TextMaterial": null,
+	"TextColor": {
+		"R": 1.0,
+		"G": 1.0,
+		"B": 1.0,
+		"A": 1.0
+	},
+	"WatermarkTextColor": {
+		"R": 0.470588237,
+		"G": 0.470588237,
+		"B": 0.5137255,
+		"A": 1.0
+	},
+	"SelectionColor": {
+		"R": 0.0,
+		"G": 0.478431374,
+		"B": 0.8,
+		"A": 1.0
+	},
+	"IsMultiline": false,
+	"MaxLength": 300,
+	"IsReadOnly": false,
+	"BackgroundSelectedColor": {
+		"R": 0.247058824,
+		"G": 0.247058824,
+		"B": 0.274509817,
+		"A": 1.0
+	},
+	"CaretColor": {
+		"R": 1.0,
+		"G": 1.0,
+		"B": 1.0,
+		"A": 1.0
+	},
+	"CaretFlashSpeed": 6.0,
+	"BackgroundSelectedFlashSpeed": 6.0,
+	"BorderColor": {
+		"R": 0.00100004673,
+		"G": 0.000111046851,
+		"B": 0.000121657693,
+		"A": 0.0
+	},
+	"BorderSelectedColor": {
+		"R": 0.0,
+		"G": 0.478431374,
+		"B": 0.8,
+		"A": 1.0
+	},
+	"Text": ">_",
+	"SelectionRange": {
+		"StartIndex": -1,
+		"EndIndex": -1
+	},
+	"ClipChildren": true,
+	"CullChildren": true,
+	"AnchorMin": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"AnchorMax": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Offsets": {
+		"Left": 0.0,
+		"Right": 1000.0,
+		"Top": 300.0,
+		"Bottom": 20.0
+	},
+	"Scale": {
+		"X": 1.0,
+		"Y": 1.0
+	},
+	"Pivot": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Shear": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Rotation": 0.0,
+	"BackgroundColor": {
+		"R": 0.2,
+		"G": 0.2,
+		"B": 0.215686277,
+		"A": 1.0
+	},
+	"Enabled": true,
+	"Visible": true
+}
 	},
 	{
 		"ID": "e5e19d3e4689a287ed77b1926d4e4af9",
@@ -146,53 +146,112 @@
 		"Name": "Panel",
 		"Control": "FlaxEngine.GUI.Panel",
 		"Data": {
-			"ScrollBars": 3,
-			"ScrollBarsSize": 0.0,
-			"AlwaysShowScrollbars": false,
-			"ScrollMargin": {
-				"Left": 0.0,
-				"Right": 0.0,
-				"Top": 0.0,
-				"Bottom": 0.0
+	"ScrollBars": 3,
+	"ScrollBarsSize": 0.0,
+	"AlwaysShowScrollbars": false,
+	"ScrollMargin": {
+		"Left": 0.0,
+		"Right": 0.0,
+		"Top": 0.0,
+		"Bottom": 0.0
+	},
+	"ClipChildren": true,
+	"CullChildren": true,
+	"AnchorMin": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"AnchorMax": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Offsets": {
+		"Left": 0.0,
+		"Right": 985.0,
+		"Top": 0.0,
+		"Bottom": 300.0
+	},
+	"Scale": {
+		"X": 1.0,
+		"Y": 1.0
+	},
+	"Pivot": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Shear": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Rotation": 0.0,
+	"BackgroundColor": {
+		"R": 0.2,
+		"G": 0.2,
+		"B": 0.2,
+		"A": 0.7
+	},
+	"Enabled": true,
+	"Visible": true
+}
+	},
+	{
+		"ID": "c1c7959a438941534c13139fca46d23f",
+		"TypeName": "FlaxEngine.UIControl",
+		"ParentID": "c38f93ab432eed1c249d81843f708001",
+		"Name": "Spacer",
+		"Transform": {
+			"Translation": {
+				"X": 985.0,
+				"Y": 0.0,
+				"Z": 0.0
 			},
-			"ClipChildren": true,
-			"CullChildren": true,
-			"AnchorMin": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"AnchorMax": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Offsets": {
-				"Left": 0.0,
-				"Right": 1000.0,
-				"Top": 0.0,
-				"Bottom": 300.0
-			},
-			"Scale": {
+			"Orientation": {
 				"X": 1.0,
-				"Y": 1.0
-			},
-			"Pivot": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Shear": {
-				"X": 0.0,
-				"Y": 0.0
-			},
-			"Rotation": 0.0,
-			"BackgroundColor": {
-				"R": 0.2,
-				"G": 0.2,
-				"B": 0.2,
-				"A": 0.7
-			},
-			"Enabled": true,
-			"Visible": true
-		}
+				"Y": 4.371138828673793e-8,
+				"Z": 4.371138828673793e-8,
+				"W": 1.910685465164705e-15
+			}
+		},
+		"Control": "FlaxEngine.GUI.Spacer",
+		"Data": {
+	"ClipChildren": true,
+	"CullChildren": true,
+	"AnchorMin": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"AnchorMax": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Offsets": {
+		"Left": 985.0,
+		"Right": 15.0,
+		"Top": 0.0,
+		"Bottom": 300.0
+	},
+	"Scale": {
+		"X": 1.0,
+		"Y": 1.0
+	},
+	"Pivot": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Shear": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Rotation": 0.0,
+	"BackgroundColor": {
+		"R": 0.2,
+		"G": 0.2,
+		"B": 0.2,
+		"A": 0.85
+	},
+	"Enabled": true,
+	"Visible": true
+}
 	}
 ]
 }
