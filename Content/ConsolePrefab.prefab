@@ -146,7 +146,7 @@
 		"Name": "Panel",
 		"Control": "FlaxEngine.GUI.Panel",
 		"Data": {
-	"ScrollBars": 3,
+	"ScrollBars": 0,
 	"ScrollBarsSize": 0.0,
 	"AlwaysShowScrollbars": false,
 	"ScrollMargin": {

@@ -27,6 +27,7 @@ namespace Journal
         private TextBox _inputTextBox;
         private ScrollableControl _outputPanel;
         private Control _scrollBar;
+        private UIControl _scrollBarGrip;
         private Vector2 _currentScreenSize;
         private float _consoleHeight = 0.4f;
         private float _last = 0f;
@@ -78,6 +79,16 @@ namespace Journal
                 Enabled = false;
                 return;
             }
+            if (_scrollBar is object)
+            {
+                _scrollBarGrip = ScrollBar.AddChildControl<Spacer>();
+                Control control = _scrollBarGrip.Control;
+                control.BackgroundColor = _scrollBar.BackgroundColor + new Color(30, 30, 30, 0);
+                control.Pivot = Vector2.Zero;
+                control.LocalX = 0f;
+                control.LocalY = 0f;
+                RealignScrollBar();
+            }
             _logs = new Queue<ConsoleLog>(MaxConsoleLogCount);
             _currentScreenSize = Screen.Size;
             _inputTextBox.EditEnd += OnEditEnd;
@@ -127,6 +138,8 @@ namespace Journal
         /// </summary>
         public void Realign()
         {
+            if (_inputTextBox is null || _outputPanel is null)
+                return;
             float containerHeight = _currentScreenSize.Y * _consoleHeight;
             float inputHeight = _baseInputHeight * _uiScale;
             float scrollBarWidth = _baseScrollWidth * _uiScale;
@@ -143,13 +156,16 @@ namespace Journal
             _outputPanel.Y = 0f;
             _outputPanel.Width = outputWidth;
             _outputPanel.Height = outputHeight;
+            FontSize = fontSize;
+            RealignLogs(true);
+
+            if (_scrollBar is null)
+                return;
             _scrollBar.X = outputWidth;
             _scrollBar.Y = 0f;
             _scrollBar.Width = scrollBarWidth;
             _scrollBar.Height = outputHeight;
-            FontSize = fontSize;
-
-            RealignLogs(true);
+            RealignScrollBar();
         }
 
 
@@ -168,11 +184,23 @@ namespace Journal
             float pos = _last - _outputPanel.Height;
             if(ScrollPosition < pos)
                 ScrollPosition = pos;
+            RealignScrollBar();
         }
 
         private void RealignScrollBar()
         {
-
+            if (_scrollBarGrip is null)
+                return;
+            if(_last <= _outputPanel.Height)
+            {
+                _scrollBarGrip.IsActive = false;
+                return;
+            }
+            _scrollBarGrip.IsActive = true;
+            Control control = _scrollBarGrip.Control;
+            control.LocalY = _scrollBar.Height * (ScrollPosition / _last);
+            control.Width = _scrollBar.Width;
+            control.Height = _scrollBar.Height * (_outputPanel.Height / _last);
         }
 
         private void RealignLogs(bool widthChange = false)
