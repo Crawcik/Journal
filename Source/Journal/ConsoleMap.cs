@@ -33,6 +33,7 @@ namespace Journal
         private float _last = 0f;
         private float _lastAnimationTime;
         private int _uiScale = 2;
+        private bool _readOnly = false;
         #endregion
 
         #region Properties
@@ -53,6 +54,16 @@ namespace Journal
             set
             {
                 _uiScale = value;
+                Realign();
+            }
+        }
+        [EditorOrder(-960), ShowInEditor]
+        public bool ReadOnly
+        {
+            get => _readOnly;
+            set
+            {
+                _readOnly = value;
                 Realign();
             }
         }
@@ -141,17 +152,25 @@ namespace Journal
             if (_inputTextBox is null || _outputPanel is null)
                 return;
             float containerHeight = _currentScreenSize.Y * _consoleHeight;
-            float inputHeight = _baseInputHeight * _uiScale;
+            float inputHeight = _readOnly ? 0f : (_baseInputHeight * _uiScale);
             float scrollBarWidth = _baseScrollWidth * _uiScale;
             float outputWidth = _currentScreenSize.X - scrollBarWidth;
             float outputHeight = containerHeight - inputHeight;
             int fontSize = _baseFontSize * _uiScale;
 
-            _inputTextBox.X = 0f;
-            _inputTextBox.Y = outputHeight;
-            _inputTextBox.Width = _currentScreenSize.X;
-            _inputTextBox.Height = inputHeight;
-            _inputTextBox.Font.Size = fontSize;
+            if (_readOnly)
+            {
+                _inputTextBox.Visible = false;
+            }
+            else
+            {
+                _inputTextBox.Visible = true;
+                _inputTextBox.X = 0f;
+                _inputTextBox.Y = outputHeight;
+                _inputTextBox.Width = _currentScreenSize.X;
+                _inputTextBox.Height = inputHeight;
+                _inputTextBox.Font.Size = fontSize;
+            }
             _outputPanel.X = 0f;
             _outputPanel.Y = 0f;
             _outputPanel.Width = outputWidth;
