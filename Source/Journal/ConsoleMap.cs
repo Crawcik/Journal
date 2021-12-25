@@ -29,11 +29,14 @@ namespace Journal
         private Control _scrollBar;
         private UIControl _scrollBarGrip;
         private Vector2 _currentScreenSize;
-        private float _consoleHeight = 0.4f;
         private float _last = 0f;
         private float _lastAnimationTime;
-        private int _uiScale = 2;
         private bool _readOnly = false;
+
+        //UI sizes
+        private float _consoleHeight = 0.4f;
+        private int _uiScale = 2;
+        private float _outputHeight;
         #endregion
 
         #region Properties
@@ -79,7 +82,7 @@ namespace Journal
 
         #region Methods
         /// <inheritdoc/>
-        public override void OnAwake()
+        public override void OnStart()
         {
             _inputTextBox = InputTextBox?.Control as TextBox;
             _outputPanel = OutputPanel?.Control as ScrollableControl;
@@ -101,11 +104,8 @@ namespace Journal
                 RealignScrollBar();
             }
             _logs = new Queue<ConsoleLog>(MaxConsoleLogCount);
-            _currentScreenSize = Screen.Size;
             _inputTextBox.EditEnd += OnEditEnd;
-            Realign();
         }
-
 
         /// <inheritdoc/>
         public override void OnLateUpdate()
@@ -142,6 +142,20 @@ namespace Journal
                     _inputTextBox.SelectionRange = new TextRange(text.Length + 1, text.Length + 1);
                 }
             }
+            if (_scrollBar is null)
+                return;
+            if (_scrollBarGrip.IsActive)
+            {
+                Control control = _scrollBarGrip.Control;
+                if (Input.Mouse.GetButton(MouseButton.Left) && control.IsMouseOver)
+                {
+                    float offset = (control.Size / 2f).Y;
+                    float position = (Input.MousePosition - (control.Pivot * control.Size)).Y;
+                    position = Mathf.Clamp(position, offset, _outputHeight - offset) - offset;
+                    ScrollPosition = Mathf.Map(position + offset, offset, _outputHeight - offset, 0f, _last - _outputHeight);
+                    _scrollBarGrip.Position = new Vector3(_scrollBarGrip.Position.X, position, 0f);
+                }
+            }
         }
 
         /// <summary>
@@ -155,8 +169,8 @@ namespace Journal
             float inputHeight = _readOnly ? 0f : (_baseInputHeight * _uiScale);
             float scrollBarWidth = _baseScrollWidth * _uiScale;
             float outputWidth = _currentScreenSize.X - scrollBarWidth;
-            float outputHeight = containerHeight - inputHeight;
             int fontSize = _baseFontSize * _uiScale;
+            _outputHeight = containerHeight - inputHeight;
 
             if (_readOnly)
             {
@@ -166,7 +180,7 @@ namespace Journal
             {
                 _inputTextBox.Visible = true;
                 _inputTextBox.X = 0f;
-                _inputTextBox.Y = outputHeight;
+                _inputTextBox.Y = _outputHeight;
                 _inputTextBox.Width = _currentScreenSize.X;
                 _inputTextBox.Height = inputHeight;
                 _inputTextBox.Font.Size = fontSize;
@@ -174,7 +188,7 @@ namespace Journal
             _outputPanel.X = 0f;
             _outputPanel.Y = 0f;
             _outputPanel.Width = outputWidth;
-            _outputPanel.Height = outputHeight;
+            _outputPanel.Height = _outputHeight;
             FontSize = fontSize;
             RealignLogs(true);
 
@@ -183,7 +197,7 @@ namespace Journal
             _scrollBar.X = outputWidth;
             _scrollBar.Y = 0f;
             _scrollBar.Width = scrollBarWidth;
-            _scrollBar.Height = outputHeight;
+            _scrollBar.Height = _outputHeight;
             RealignScrollBar();
         }
 
@@ -200,9 +214,10 @@ namespace Journal
                 oldLog.Destroy();
                 RealignLogs();
             }
-            float pos = _last - _outputPanel.Height;
-            if(ScrollPosition < pos)
-                ScrollPosition = pos;
+            float scrollPos = ScrollPosition;
+            float limit = _last - _outputHeight;
+            if(scrollPos < limit)
+                ScrollPosition = limit;
             RealignScrollBar();
         }
 
@@ -210,7 +225,7 @@ namespace Journal
         {
             if (_scrollBarGrip is null)
                 return;
-            if(_last <= _outputPanel.Height)
+            if (_last <= _outputPanel.Height)
             {
                 _scrollBarGrip.IsActive = false;
                 return;
@@ -249,7 +264,6 @@ namespace Journal
         {
             if (Input.GetKeyDown(KeyboardKeys.Return))
             {
-                Debug.Log("Command NOW!");
                 _inputTextBox.SetText(">");
             }
         }
