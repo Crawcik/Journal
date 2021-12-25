@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Collections.Generic;
 using FlaxEngine;
 
 namespace Journal
@@ -15,20 +18,21 @@ namespace Journal
         public UICanvas ConsoleActor;
         [EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", false)]
         public Prefab ConsolePrefab;
+        private List<Command> _commands;
         #endregion
 
         #region Properties
         public static ConsoleManager Singleton { get; private set; }
-        public ConsoleMap ConsoleMap { get; private set; }
+        public ConsoleMap Map { get; private set; }
         #endregion
 
         #region Methods
         /// <inheritdoc/>
-        public override void OnStart()
+        public override void OnAwake()
         {
             if (Singleton is object)
             {
-                Debug.LogWarning("Multiple instances of command manager script found! Destroying additional instances");
+                Debug.LogWarning("Multiple instances of command manager script found! Destroying additional instances.");
                 Destroy(this);
                 return;
             }
@@ -38,6 +42,7 @@ namespace Journal
                 return;
             }
             Singleton = this;
+            _commands = new List<Command>();
             Debug.Logger.LogHandler.SendLog += OnDebugLog;
 #if FLAX_EDITOR
             FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored += Dispose;
@@ -64,6 +69,64 @@ namespace Journal
 #endif
         }
 
+        /// <summary>
+        /// Executes command with specified name... who would have guess
+        /// </summary>
+        /// <param name="name">The command name</param>
+        public static void ExecuteCommand(string name)
+        {
+            Command command = Singleton._commands.FirstOrDefault(x => x.Name == name);
+            if(command is null)
+            {
+                Debug.LogError("Command not found!");
+                return;
+            }
+            command.MethodInfo.Invoke(command.Target, null);
+        }
+
+        /// <summary>
+        /// Registers command with specified name and execution method in given command group
+        /// </summary>
+        /// <param name="name">The command name</param>
+        /// <param name="method">Called when command is being executed</param>
+        public static void RegisterCommand(string name, Action method) => RegisterCommand(name, method.Method, method.Target);
+
+        /// <summary>
+        /// Registers command with specified name and execution method in given command group
+        /// This overload is not recomended!
+        /// </summary>
+        /// <param name="name">The command name</param>
+        /// <param name="method">The method info</param>
+        /// <param name="target">The method info</param>
+        public static void RegisterCommand(string name, MethodInfo method, object target)
+        {
+            if(Singleton is null)
+            {
+                Debug.LogError("Register command was called too early or command manager doesnt exist!");
+                return;
+            }
+            name = name.Replace(' ', '_');
+            if (Singleton._commands.Any(x => x.Name == name))
+                Debug.LogWarning($"Command with this name \"{name}\" already exists.");
+            else
+                Singleton._commands.Add(new Command(name, method, target));
+        }
+
+        /// <summary>
+        /// Unregisters command with specified name
+        /// </summary>
+        /// <param name="name">The command name</param>
+        public static void UnregisterCommand(string name, Action method)
+        {
+            Command command = Singleton._commands.FirstOrDefault(x => x.Name == name);
+            if(command is null)
+            {
+                Debug.LogWarning($"Command with this name \"{name}\" doesn't exists.");
+                return;
+            }
+            Singleton._commands.Remove(command);
+        }
+
         private bool CheckSettings()
         {
             if (CreateConsoleFromPrefab)
@@ -80,8 +143,8 @@ namespace Journal
                 Debug.LogError("Console actor is not set or cannot be spawned!");
                 return false;
             }
-            ConsoleMap = ConsoleActor.GetScript<ConsoleMap>();
-            if (ConsoleMap is null)
+            Map = ConsoleActor.GetScript<ConsoleMap>();
+            if (Map is null)
             {
                 Debug.LogError("Cannot find \"ConsoleMap\" script in console actor!");
                 return false;
@@ -93,13 +156,27 @@ namespace Journal
         private void Dispose()
         {
             Debug.Logger.LogHandler.SendLog -= OnDebugLog;
-            ConsoleMap.Clear();
+            Map.Clear();
 #if FLAX_EDITOR
             FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored -= Dispose;
 #endif
         }
 
-        private void OnDebugLog(LogType level, string msg, Object obj, string stackTrace) => ConsoleMap.AddLog(new ConsoleLog(msg));
+        private void OnDebugLog(LogType level, string msg, FlaxEngine.Object obj, string stackTrace) => Map.AddLog(new ConsoleLog(msg));
         #endregion
+
+        private class Command 
+        {
+            public readonly string Name;
+            public readonly MethodInfo MethodInfo;
+            public readonly object Target;
+
+            public Command(string name, MethodInfo methodInfo, object target)
+            {
+                this.Name = name;
+                this.MethodInfo = methodInfo;
+                this.Target = target;
+            }
+        }
     }
 }

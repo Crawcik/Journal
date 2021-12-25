@@ -159,7 +159,7 @@ namespace Journal
         }
 
         /// <summary>
-        /// Aligning all UI elements
+        /// Alignings all UI elements
         /// </summary>
         public void Realign()
         {
@@ -203,6 +203,9 @@ namespace Journal
 
 
         //TODO: Find better way of handling logs (by that I mean not repositioning them after max amount reached)
+        /// <summary>
+        /// Adds log to console
+        /// </summary>
         public void AddLog(ConsoleLog newLog)
         {
             newLog.Spawn(OutputPanel, PanelWidth, _last, FontSize);
@@ -220,6 +223,16 @@ namespace Journal
                 ScrollPosition = limit;
             RealignScrollBar();
         }
+
+        /// <summary>
+        /// Clears console from all logs
+        /// </summary>
+        public void Clear()
+        {
+            while (_logs.Count > 0)
+                _logs.Dequeue().Destroy();
+        }
+
 
         private void RealignScrollBar()
         {
@@ -254,16 +267,11 @@ namespace Journal
             }
         }
 
-        public void Clear()
-        {
-            while (_logs.Count > 0)
-                _logs.Dequeue().Destroy();
-        }
-
         private void OnEditEnd()
         {
             if (Input.GetKeyDown(KeyboardKeys.Return))
             {
+                ConsoleManager.ExecuteCommand(_inputTextBox.Text.Remove(0,1).Trim());
                 _inputTextBox.SetText(">");
             }
         }
