@@ -18,6 +18,8 @@ namespace Journal
         public UICanvas ConsoleActor;
         [EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", false)]
         public Prefab ConsolePrefab;
+        [EditorOrder(-980)]
+        public KeyboardKeys OpenCloseButton = KeyboardKeys.BackQuote;
         private List<Command> _commands;
         #endregion
 
@@ -47,6 +49,13 @@ namespace Journal
 #if FLAX_EDITOR
             FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored += Dispose;
 #endif
+        }
+
+        /// <inheritdoc/>
+        public override void OnLateUpdate()
+        {
+            if(Input.GetKeyDown(OpenCloseButton))
+                Map.Actor.IsActive = !Map.Actor.IsActive;
         }
 
         /// <inheritdoc/>
