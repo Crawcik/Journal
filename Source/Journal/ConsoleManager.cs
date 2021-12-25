@@ -13,7 +13,7 @@ namespace Journal
     {
         #region Fields
         [EditorOrder(-1000)]
-        public bool CreateConsoleFromPrefab;
+        public bool CreateConsoleFromPrefab = true;
         [EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", true)]
         public UICanvas ConsoleActor;
         [EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", false)]

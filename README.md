@@ -36,7 +36,8 @@ Also here is official tutorial for installing plugins: https://docs.flaxengine.c
 2. Go to `Journal/Content/` drag `ConsolePrefab` into "ConsolePrefab" field in script
 3. If you want to customize console UI:
    1. Go to `Journal/Content/` in editor and drag `ConsolePrefab` on to the scene
-   2. In ConsoleManager script set "CreateConsoleFromPrefab" to false
+   2. In ConsoleManager script set "CreateConsoleFromPrefab" unchecked
+   3. Drag console actor to "ConsoleActor" field
   
 ## How to add commands to console?
 Like this:
