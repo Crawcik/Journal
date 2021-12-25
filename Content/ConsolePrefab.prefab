@@ -1,7 +1,7 @@
 {
 	"ID": "51e5a50e4bfb8c4e2d9fb3a0a5353e73",
 	"TypeName": "FlaxEngine.Prefab",
-	"EngineBuild": 6225,
+	"EngineBuild": 6226,
 	"Data": [
 	{
 		"ID": "c38f93ab432eed1c249d81843f708001",
@@ -24,7 +24,7 @@
 		"V": {
 	"InputTextBox": "902ce8b549cc79630e308e966d307c2a",
 	"OutputPanel": "e5e19d3e4689a287ed77b1926d4e4af9",
-	"ScrollBar": "f1101ec548320c8d8dad56a950e463b3"
+	"ScrollBar": "c1c7959a438941534c13139fca46d23f"
 }
 	},
 	{
