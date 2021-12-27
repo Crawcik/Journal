@@ -165,18 +165,18 @@ namespace Journal
         }
 
         /// <summary>
-        /// Unregisters command with specified name
+        /// Unregisters all commands with specified name
         /// </summary>
         /// <param name="name">The command name</param>
         public static void UnregisterCommand(string name)
         {
-            Command command = Singleton._commands.FirstOrDefault(x => x.Name == name);
-            if(command is null)
+            List<Command> commands = Singleton._commands.FindAll(x => x.Name == name);
+            if(commands.Count == 0)
             {
-                Debug.LogWarning($"Command with this name \"{name}\" doesn't exists.");
+                Debug.LogWarning($"Command with name \"{name}\" doesn't exists.");
                 return;
             }
-            Singleton._commands.Remove(command);
+            commands.ForEach(x => Singleton._commands.Remove(x));
         }
 
         private bool CheckSettings()
