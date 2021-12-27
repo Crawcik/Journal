@@ -45,6 +45,9 @@ namespace Journal
             }
             Singleton = this;
             _commands = new List<Command>();
+            RegisterCommand("help", Help);
+            RegisterCommand<string>("echo", Debug.Log);
+            RegisterCommand("exit", () => Engine.RequestExit(0));
             Debug.Logger.LogHandler.SendLog += OnDebugLog;
 #if FLAX_EDITOR
             FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored += Dispose;
@@ -202,6 +205,18 @@ namespace Journal
                 return false;
             }
             return true;
+        }
+
+        private void Help()
+        {
+            IEnumerable<Command> sorted = _commands.OrderBy(x=>x.Name);
+            Debug.Log($"List of all commands:");
+            foreach(Command command in sorted)
+            {
+                string paramsText = "";
+                Array.ForEach(command.Parameters, x => paramsText += $" {x.Name}:{x.ParameterType.Name}");
+                Debug.Log(" --> " + command.Name + paramsText);
+            }
         }
 
         //Destroys all logs created by Object.New<T> to minimalize crash propability 
