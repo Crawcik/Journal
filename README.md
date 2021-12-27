@@ -1,8 +1,13 @@
 # Journal - Console for Flax Engine with command handling
 
 ## How can I implement this in my project?
+#### With **Git**:
+1. Use this command somewhere in your project folder `git submodule add https://github.com/Crawcik/Journal/`<br> (for example `<your-flax-project-path>/Plugins/Journal/`)
+3. To update Journal use `git submodule update`. If something goes wrong add `--init` at the end of the command
+#### Normal way:
 1. Download this project .zip or .tar.gz
 2. Put in folder near your project (for example `<your-flax-project-path>/Plugins/Journal/`)
+#### 
 3. Add in your `.flaxproj` file path to plugin, like in this example:
 ```json
 {
@@ -18,7 +23,7 @@
 	],
 }
 ```
-4. Go to <your-flax-project-path>/Source/Game/Game.Build.cs and add "**Journal**" module, here is example: *if you don't want to use commands this is optional*
+4. Go to `<your-flax-project-path>/Source/Game/Game.Build.cs` and add "**Journal**" module, here is example: *if you don't want to use commands this is optional*
 ```cs
 public override void Setup(BuildOptions options)
 {
