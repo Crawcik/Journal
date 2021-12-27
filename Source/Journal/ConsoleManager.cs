@@ -82,15 +82,30 @@ namespace Journal
         /// Executes command with specified name... who would have guess
         /// </summary>
         /// <param name="name">The command name</param>
-        public static void ExecuteCommand(string name)
+        /// <param name="args">Parameters of the command</param>
+        public static void ExecuteCommand(string name, params string[] args)
         {
-            Command command = Singleton._commands.FirstOrDefault(x => x.Name == name);
+            
+            object[] paramArray = args is null ? null : new object[args.Length];
+            Command command = Singleton._commands.FirstOrDefault(x =>
+            {
+                if (x.Name != name || x.Parameters.Length != args.Length)
+                    return false;
+                try
+                {
+                    for (int i = 0; i < args.Length; i++)
+                        paramArray[i] = Convert.ChangeType(args[i], x.Parameters[i].ParameterType);
+                }
+                catch { return false; }
+                return true;
+            });
             if(command is null)
             {
                 Debug.LogError("Command not found!");
                 return;
             }
-            command.MethodInfo.Invoke(command.Target, null);
+            
+            command.MethodInfo.Invoke(command.Target, paramArray);
         }
 
         /// <summary>
@@ -99,6 +114,34 @@ namespace Journal
         /// <param name="name">The command name</param>
         /// <param name="method">Called when command is being executed</param>
         public static void RegisterCommand(string name, Action method) => RegisterCommand(name, method.Method, method.Target);
+
+        /// <summary>
+        /// Registers command with specified name and execution method in given command group
+        /// </summary>
+        /// <param name="name">The command name</param>
+        /// <param name="method">Called when command is being executed</param>
+        public static void RegisterCommand<T>(string name, Action<T> method) => RegisterCommand(name, method.Method, method.Target);
+
+        /// <summary>
+        /// Registers command with specified name and execution method in given command group
+        /// </summary>
+        /// <param name="name">The command name</param>
+        /// <param name="method">Called when command is being executed</param>
+        public static void RegisterCommand<T1, T2>(string name, Action<T1, T2> method) => RegisterCommand(name, method.Method, method.Target);
+
+        /// <summary>
+        /// Registers command with specified name and execution method in given command group
+        /// </summary>
+        /// <param name="name">The command name</param>
+        /// <param name="method">Called when command is being executed</param>
+        public static void RegisterCommand<T1, T2, T3>(string name, Action<T1, T2, T3> method) => RegisterCommand(name, method.Method, method.Target);
+
+        /// <summary>
+        /// Registers command with specified name and execution method in given command group
+        /// </summary>
+        /// <param name="name">The command name</param>
+        /// <param name="method">Called when command is being executed</param>
+        public static void RegisterCommand<T1, T2, T3, T4>(string name, Action<T1, T2, T3, T4> method) => RegisterCommand(name, method.Method, method.Target);
 
         /// <summary>
         /// Registers command with specified name and execution method in given command group
@@ -115,8 +158,8 @@ namespace Journal
                 return;
             }
             name = name.Replace(' ', '_');
-            if (Singleton._commands.Any(x => x.Name == name))
-                Debug.LogWarning($"Command with this name \"{name}\" already exists.");
+            if (Singleton._commands.Any(x => x.Name == name && x.Parameters.Length == method.GetParameters().Length))
+                Debug.LogWarning($"Command with this name \"{name}\" and exact parameters count already exists.");
             else
                 Singleton._commands.Add(new Command(name, method, target));
         }
@@ -125,7 +168,7 @@ namespace Journal
         /// Unregisters command with specified name
         /// </summary>
         /// <param name="name">The command name</param>
-        public static void UnregisterCommand(string name, Action method)
+        public static void UnregisterCommand(string name)
         {
             Command command = Singleton._commands.FirstOrDefault(x => x.Name == name);
             if(command is null)
@@ -178,12 +221,14 @@ namespace Journal
         {
             public readonly string Name;
             public readonly MethodInfo MethodInfo;
+            public readonly ParameterInfo[] Parameters;
             public readonly object Target;
 
             public Command(string name, MethodInfo methodInfo, object target)
             {
                 this.Name = name;
                 this.MethodInfo = methodInfo;
+                this.Parameters = methodInfo.GetParameters();
                 this.Target = target;
             }
         }

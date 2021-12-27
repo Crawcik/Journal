@@ -1,6 +1,7 @@
 ﻿using FlaxEngine;
 using FlaxEngine.GUI;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Journal
 {
@@ -271,7 +272,9 @@ namespace Journal
         {
             if (Input.GetKeyDown(KeyboardKeys.Return))
             {
-                ConsoleManager.ExecuteCommand(_inputTextBox.Text.Remove(0,1).Trim());
+                Debug.Log(_inputTextBox.Text);
+                string[] args = _inputTextBox.Text.Remove(0, 1).Trim().Split(' ');
+                ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
                 _inputTextBox.SetText(">");
             }
         }
