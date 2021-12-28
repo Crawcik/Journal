@@ -20,6 +20,8 @@ namespace Journal
         public Prefab ConsolePrefab;
         [EditorOrder(-980)]
         public KeyboardKeys OpenCloseButton = KeyboardKeys.BackQuote;
+        [EditorOrder(-970)]
+        public bool DontDestroyOnLoad = false;
         private List<Command> _commands;
         #endregion
 
@@ -48,6 +50,7 @@ namespace Journal
             RegisterCommand("help", Help);
             RegisterCommand<string>("echo", Debug.Log);
             RegisterCommand("exit", () => Engine.RequestExit(0));
+            RegisterCommand("clear", () => Map.Clear());
             Debug.Logger.LogHandler.SendLog += OnDebugLog;
 #if FLAX_EDITOR
             FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored += Dispose;
@@ -229,7 +232,7 @@ namespace Journal
 #endif
         }
 
-        private void OnDebugLog(LogType level, string msg, FlaxEngine.Object obj, string stackTrace) => Map.AddLog(new ConsoleLog(msg));
+        private void OnDebugLog(LogType level, string msg, FlaxEngine.Object obj, string stackTrace) => Map.AddLog(new ConsoleLog(msg, level));
         #endregion
 
         private class Command 

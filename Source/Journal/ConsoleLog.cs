@@ -5,16 +5,19 @@ namespace Journal
 {
     public class ConsoleLog
     {
+
         #region Fields
         public readonly string Text;
+        public readonly LogType Level;
         private UIControl _uiElement;
         #endregion
 
         public Label Label { get; private set; }
 
-        public ConsoleLog(string text)
+        public ConsoleLog(string text, LogType level)
         {
             Text = text;
+            Level = level;
         }
 
         #region Methods
@@ -25,6 +28,7 @@ namespace Journal
             Label = new Label(0f, 0f, width, 0f)
             {
                 Text = new LocalizedString(Text),
+                TextColor = GetColor(),
                 HorizontalAlignment = TextAlignment.Near,
                 VerticalAlignment = TextAlignment.Center,
                 AutoHeight = true,
@@ -45,6 +49,17 @@ namespace Journal
             if (_uiElement is null)
                 return;
             Object.Destroy(_uiElement);
+        }
+
+        private Color GetColor()
+        {
+            switch(Level) 
+            {
+                case LogType.Warning:   return Color.Yellow;
+                case LogType.Error:     return Color.Red;
+                case LogType.Fatal:     return Color.DarkRed;
+                default:                return Color.White;
+            }
         }
         #endregion
     }
