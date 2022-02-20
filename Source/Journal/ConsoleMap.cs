@@ -12,7 +12,7 @@ namespace Journal
     {
         #region Constants
         private const float _baseInputHeight = 10f;
-        private const float _baseScrollWidth = 8f;
+        private const float _baseScrollWidth = 15f;
         private const int _baseFontSize = 5;
         #endregion
 
@@ -113,7 +113,14 @@ namespace Journal
         {
             Vector2 screenSize = Screen.Size;
             string text = _inputTextBox.Text.Trim();
+            float scrollDelta = Input.MouseScrollDelta;
             _lastAnimationTime += Time.DeltaTime;
+            if (_outputPanel.IsMouseOver && scrollDelta != 0f)
+            {
+                ScrollPosition =  Mathf.Clamp(ScrollPosition - scrollDelta * 20f, 0f, _last - _outputHeight);
+                if (_scrollBar != null)
+                    RealignScrollBar();
+            }
             if (screenSize != _currentScreenSize)
             {
                 _currentScreenSize = screenSize;
@@ -168,7 +175,7 @@ namespace Journal
                 return;
             float containerHeight = _currentScreenSize.Y * _consoleHeight;
             float inputHeight = _readOnly ? 0f : (_baseInputHeight * _uiScale);
-            float scrollBarWidth = _baseScrollWidth * _uiScale;
+            float scrollBarWidth = _baseScrollWidth * (_uiScale * 0.75f);
             float outputWidth = _currentScreenSize.X - scrollBarWidth;
             int fontSize = _baseFontSize * _uiScale;
             _outputHeight = containerHeight - inputHeight;
