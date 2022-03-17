@@ -45,6 +45,7 @@ namespace Journal
                 Enabled = false;
                 return;
             }
+            Map.Actor.IsActive = false;
             Singleton = this;
             _commands = new List<Command>();
             RegisterCommand("help", Help);

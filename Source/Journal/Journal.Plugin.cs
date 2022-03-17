@@ -22,19 +22,5 @@ namespace Journal
             IsAlpha = false,
             IsBeta = false,
 		};
-        
-        /// <inheritdoc />
-        public override void Initialize()
-        {
-            base.Initialize();
-            Debug.Log("\"Journal\" enabled!");
-        }
-
-        /// <inheritdoc />
-        public override void Deinitialize()
-        {
-            base.Deinitialize();
-            Debug.Log("\"Journal\" disabled!");
-        }
     }
 }

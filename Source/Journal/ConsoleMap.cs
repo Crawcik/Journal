@@ -83,7 +83,7 @@ namespace Journal
 
         #region Methods
         /// <inheritdoc/>
-        public override void OnStart()
+        public override void OnAwake()
         {
             _inputTextBox = InputTextBox?.Control as TextBox;
             _outputPanel = OutputPanel?.Control as ScrollableControl;
@@ -106,6 +106,8 @@ namespace Journal
             }
             _logs = new Queue<ConsoleLog>(MaxConsoleLogCount);
             _inputTextBox.EditEnd += OnEditEnd;
+            _currentScreenSize = Screen.Size;
+            Realign();
         }
 
         /// <inheritdoc/>
