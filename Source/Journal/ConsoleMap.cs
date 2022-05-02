@@ -14,6 +14,7 @@ namespace Journal
         private const float _baseInputHeight = 10f;
         private const float _baseScrollWidth = 15f;
         private const int _baseFontSize = 5;
+        private const int _baseMaxHints = 5;
         #endregion
 
         #region Fields
@@ -23,12 +24,18 @@ namespace Journal
         public UIControl OutputPanel;
         [EditorOrder(-980)]
         public UIControl ScrollBar;
+        [EditorOrder(-977)]
         public byte MaxConsoleLogCount = 200;
+        [EditorOrder(-950)]
+        public bool ShowHints = true;
         private Queue<ConsoleLog> _logs;
+        private IEnumerable<(string, string)> _hintList;
         private TextBox _inputTextBox;
         private ScrollableControl _outputPanel;
         private Control _scrollBar;
         private UIControl _scrollBarGrip;
+        private UIControl _hintBox;
+        private VerticalPanel _hintBoxControl;
         private Vector2 _currentScreenSize;
         private float _last = 0f;
         private float _lastAnimationTime;
@@ -88,11 +95,27 @@ namespace Journal
             _inputTextBox = InputTextBox?.Control as TextBox;
             _outputPanel = OutputPanel?.Control as ScrollableControl;
             _scrollBar = ScrollBar?.Control;
-            if (_inputTextBox is null || _outputPanel is null)
+            if (_outputPanel is null)
             {
                 Debug.LogError("Fields in \"Command map\" are empty!");
                 Enabled = false;
                 return;
+            }
+            if(_inputTextBox is object)
+            {
+                _hintList = new List<(string, string)>();
+                _hintBox = new UIControl {
+                    Name = "Hints",
+                    Parent = Actor,
+                    Control = _hintBoxControl = new VerticalPanel {
+                        Visible = false,
+                        AutoSize = false,
+                        BackgroundColor = _inputTextBox.BackgroundColor + new Color(30, 30, 30, 0),
+                        Pivot = new Vector2(0f, 0f),
+                    }
+                };
+                _inputTextBox.TextChanged += OnTextChanged;
+                _inputTextBox.EditEnd += OnEditEnd;
             }
             if (_scrollBar is object)
             {
@@ -100,12 +123,10 @@ namespace Journal
                 Control control = _scrollBarGrip.Control;
                 control.BackgroundColor = _scrollBar.BackgroundColor + new Color(30, 30, 30, 0);
                 control.Pivot = Vector2.Zero;
-                control.LocalX = 0f;
-                control.LocalY = 0f;
+                control.LocalLocation = Vector2.Zero;
                 RealignScrollBar();
             }
             _logs = new Queue<ConsoleLog>(MaxConsoleLogCount);
-            _inputTextBox.EditEnd += OnEditEnd;
             _currentScreenSize = Screen.Size;
             Realign();
         }
@@ -152,6 +173,10 @@ namespace Journal
                     _inputTextBox.SelectionRange = new TextRange(text.Length + 1, text.Length + 1);
                 }
             }
+            else
+            {
+                _hintBoxControl.Visible = false;
+            }
             if (_scrollBar is null)
                 return;
             if (_scrollBarGrip.IsActive)
@@ -173,7 +198,7 @@ namespace Journal
         /// </summary>
         public void Realign()
         {
-            if (_inputTextBox is null || _outputPanel is null)
+            if (_outputPanel is null)
                 return;
             float containerHeight = _currentScreenSize.Y * _consoleHeight;
             float inputHeight = _readOnly ? 0f : (_baseInputHeight * _uiScale);
@@ -182,32 +207,27 @@ namespace Journal
             int fontSize = _baseFontSize * _uiScale;
             _outputHeight = containerHeight - inputHeight;
 
-            if (_readOnly)
+            if (_readOnly || _inputTextBox is null)
             {
                 _inputTextBox.Visible = false;
             }
             else
             {
                 _inputTextBox.Visible = true;
-                _inputTextBox.X = 0f;
-                _inputTextBox.Y = _outputHeight;
-                _inputTextBox.Width = _currentScreenSize.X;
-                _inputTextBox.Height = inputHeight;
+                _inputTextBox.Location = new Vector2(0f, _outputHeight);
+                _inputTextBox.Size = new Vector2(_currentScreenSize.X, inputHeight);
                 _inputTextBox.Font.Size = fontSize;
+                _hintBoxControl.Location = new Vector2(0f, _outputHeight - _hintBoxControl.Height);
             }
-            _outputPanel.X = 0f;
-            _outputPanel.Y = 0f;
-            _outputPanel.Width = outputWidth;
-            _outputPanel.Height = _outputHeight;
+            _outputPanel.Location = Vector2.Zero;
+            _outputPanel.Size = new Vector2(outputWidth, _outputHeight);
             FontSize = fontSize;
             RealignLogs(true);
 
             if (_scrollBar is null)
                 return;
-            _scrollBar.X = outputWidth;
-            _scrollBar.Y = 0f;
-            _scrollBar.Width = scrollBarWidth;
-            _scrollBar.Height = _outputHeight;
+            _scrollBar.Location = new Vector2(outputWidth, 0f);
+            _scrollBar.Size = new Vector2(scrollBarWidth, _outputHeight);
             RealignScrollBar();
         }
 
@@ -275,6 +295,61 @@ namespace Journal
                     log.Label.Width = width;
                 _last += log.Label.Height + 2f;
             }
+        }
+
+        private void OnTextChanged()
+        {
+            if (_inputTextBox is null || _hintBox is null || _readOnly || !ShowHints)
+                return;
+            if ((_inputTextBox.Text == ">" && _inputTextBox.Text.Length == 1) || _inputTextBox.Text == ">_")
+            {
+                _hintBoxControl.Visible = false;
+                return;
+            }
+            string text = _inputTextBox.Text.Remove(0, 1);
+            IEnumerable<(string, string)> commands = ConsoleManager.Singleton.Commands.Where(x => x.Name.StartsWith(text)).Select(x => (x.Name, string.Join(" ", x.Parameters.Select(y => $"[{y.Name}: {y.ParameterType.Name}]")))).OrderBy(x => x.Item1);
+            bool refresh = commands.Except(_hintList).Any() || _hintList.Except(commands).Any();
+            _hintList = commands;
+            if (!refresh)
+            {
+                _hintList = commands;
+                return;
+            }
+            if (commands.Count() == 0)
+            {
+                _hintBoxControl.Visible = false;
+                return;
+            }
+            _hintList = commands;
+            _hintBoxControl.DisposeChildren();
+            Label longestLabel = null;
+            int i = 0;
+            foreach ((string, string) command in commands)
+            {
+                HintLabel label = _hintBoxControl.AddChild<HintLabel>();
+                label.Font.Size = _baseFontSize * _uiScale;
+                label.AutoWidth = true;
+                label.HorizontalAlignment = TextAlignment.Near;
+                label.SetHint(command);
+                label.TextColorHighlighted = Color.Yellow;
+                label.Clicked += x => {
+                    _inputTextBox.Defocus();
+                    _inputTextBox.Text = ">" + x;
+                    _inputTextBox.Focus();
+                    _inputTextBox.SelectionRange = new TextRange(x.Length + 1, x.Length + 1);
+                };
+                longestLabel ??= label;
+                if (label.Text.Value.Length > longestLabel.Text.Value.Length)
+                    longestLabel = label;
+                i++;
+                if (i >= _baseFontSize * _uiScale)
+                    break;
+            }
+            Vector2 size = longestLabel.Font.GetFont().MeasureText(longestLabel.Text);
+            _hintBoxControl.Width = size.X + _baseFontSize * _uiScale;
+            _hintBoxControl.Height = size.Y * i * 1.375f;
+            _hintBoxControl.Location = new Vector2(0f, _outputHeight - _hintBoxControl.Height);
+            _hintBoxControl.Visible = true;
         }
 
         private void OnEditEnd()

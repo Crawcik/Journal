@@ -28,6 +28,9 @@ namespace Journal
         #region Properties
         public static ConsoleManager Singleton { get; private set; }
         public ConsoleMap Map { get; private set; }
+
+        internal IReadOnlyList<Command> Commands => _commands;
+        
         #endregion
 
         #region Methods
@@ -236,7 +239,7 @@ namespace Journal
         private void OnDebugLog(LogType level, string msg, FlaxEngine.Object obj, string stackTrace) => Map.AddLog(new ConsoleLog(msg, level));
         #endregion
 
-        private class Command 
+        internal class Command 
         {
             public readonly string Name;
             public readonly MethodInfo MethodInfo;
