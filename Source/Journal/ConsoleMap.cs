@@ -1,5 +1,6 @@
 ﻿using FlaxEngine;
 using FlaxEngine.GUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -40,6 +41,7 @@ namespace Journal
         private float _last = 0f;
         private float _lastAnimationTime;
         private bool _readOnly = false;
+        private int _hintSelectIndex = -1;
 
         //UI sizes
         private float _consoleHeight = 0.4f;
@@ -101,7 +103,7 @@ namespace Journal
                 Enabled = false;
                 return;
             }
-            if(_inputTextBox is object)
+            if (_inputTextBox is object)
             {
                 _hintList = new List<(string, string)>();
                 _hintBox = new UIControl {
@@ -115,7 +117,15 @@ namespace Journal
                     }
                 };
                 _inputTextBox.TextChanged += OnTextChanged;
-                _inputTextBox.EditEnd += OnEditEnd;
+                if (_inputTextBox is CommandTextBox commandTextBox)
+                {
+                    commandTextBox.OnCommand += OnCommand;
+                    commandTextBox.OnHintChange += OnHintChange;
+                }
+                else
+                {
+                    _inputTextBox.EditEnd += OnEditEnd;
+                }
             }
             if (_scrollBar is object)
             {
@@ -131,8 +141,8 @@ namespace Journal
             Realign();
         }
 
-        /// <inheritdoc/>
-        public override void OnLateUpdate()
+		/// <inheritdoc/>
+		public override void OnLateUpdate()
         {
             Vector2 screenSize = Screen.Size;
             string text = _inputTextBox.Text.Trim();
@@ -263,7 +273,6 @@ namespace Journal
                 _logs.Dequeue().Destroy();
         }
 
-
         private void RealignScrollBar()
         {
             if (_scrollBarGrip is null)
@@ -296,11 +305,14 @@ namespace Journal
                 _last += log.Label.Height + 2f;
             }
         }
+        #endregion
 
+        #region Event Handlers
         private void OnTextChanged()
         {
             if (_inputTextBox is null || _hintBox is null || _readOnly || !ShowHints)
                 return;
+            _hintSelectIndex = -1;
             if (_inputTextBox.Text == ">" || _inputTextBox.Text == ">_" || _inputTextBox.Text.Length < 2)
             {
                 _hintList = new List<(string, string)>();
@@ -308,12 +320,16 @@ namespace Journal
                 return;
             }
             string text = _inputTextBox.Text.Remove(0, 1);
-            IEnumerable<(string, string)> commands = ConsoleManager.Singleton.Commands.Where(x => x.Name.StartsWith(text)).Select(x => (x.Name, string.Join(" ", x.Parameters.Select(y => $"[{y.Name}: {y.ParameterType.Name}]")))).OrderBy(x => x.Item1);
+            IEnumerable<(string, string)> commands = ConsoleManager.Singleton.Commands
+                .Where(x => x.Name.StartsWith(text))
+                .Select(x => (x.Name, string.Join(" ", x.Parameters
+                    .Select(y => $"[{y.Name}: {y.ParameterType.Name}]")
+                ))).OrderBy(x => x.Item1);
             bool refresh = commands.Except(_hintList).Any() || _hintList.Except(commands).Any();
             _hintList = commands;
             if (!refresh)
                 return;
-            if (commands.Count() == 0)
+            if (!commands.Any())
             {
                 _hintBoxControl.Visible = false;
                 return;
@@ -331,9 +347,7 @@ namespace Journal
                 label.SetHint(command);
                 label.TextColorHighlighted = Color.Yellow;
                 label.Clicked += x => {
-                    _inputTextBox.Defocus();
-                    _inputTextBox.Text = ">" + x;
-                    _inputTextBox.Focus();
+                    _inputTextBox.SetText(">" + x);
                     _inputTextBox.SelectionRange = new TextRange(x.Length + 1, x.Length + 1);
                 };
                 longestLabel ??= label;
@@ -352,14 +366,38 @@ namespace Journal
 
         private void OnEditEnd()
         {
-            if (Input.GetKeyDown(KeyboardKeys.Return))
-            {
-                Debug.Log(_inputTextBox.Text);
-                string[] args = _inputTextBox.Text.Remove(0, 1).Trim().Split(' ');
-                ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
-                _inputTextBox.SetText(">");
-            }
+            if (!Input.GetKeyDown(KeyboardKeys.Return))
+                return;
+            Debug.Log(_inputTextBox.Text);
+            string[] args = _inputTextBox.Text.Remove(0, 1).Trim().Split(' ');
+            ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
+            _inputTextBox.SetText(">");
         }
+
+        private void OnHintChange()
+		{
+            _hintSelectIndex++;
+            if (_hintSelectIndex >= _hintList.Count())
+                _hintSelectIndex = 0;
+			_hintBoxControl.Children[_hintSelectIndex].OnMouseEnter(Vector2.Zero);
+            _hintBoxControl.Children[(_hintSelectIndex == 0 ? _hintList.Count() : _hintSelectIndex) - 1].OnMouseLeave();
+		}
+
+		private void OnCommand(string command)
+		{
+            if(_hintSelectIndex > 0)
+            {
+                string text = ">" + ((HintLabel)_hintBoxControl.Children[_hintSelectIndex]).HintText;
+                _inputTextBox.SetText(text);
+                _hintSelectIndex = -1;
+                _inputTextBox.SelectionRange = new TextRange(text.Length, text.Length);
+                return;
+            }
+			Debug.Log(_inputTextBox.Text);
+            string[] args = command.Split(' ');
+            ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
+            _inputTextBox.SetText(">");
+		}
         #endregion
     }
 }

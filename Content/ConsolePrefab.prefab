@@ -39,7 +39,7 @@
 				"Z": 0.0
 			}
 		},
-		"Control": "FlaxEngine.GUI.TextBox",
+		"Control": "Journal.CommandTextBox",
 		"Data": {
 	"WatermarkText": null,
 	"Wrapping": 0,

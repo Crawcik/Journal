@@ -10,8 +10,12 @@ namespace Journal
     {
 		private bool _isPressed;
         private string _hintText;
+
+        public string HintText => _hintText;
+
         public event System.Action<string> Clicked;
 
+        #region Methods
         /// <summary>
 		/// Sets hint parameter and text
 		/// </summary>
@@ -145,5 +149,6 @@ namespace Journal
 
             base.OnSubmit();
         }
+        #endregion
     }
 }
