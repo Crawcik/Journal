@@ -1,12 +1,55 @@
 # Journal - Console for Flax Engine with command handling
 
-## How can I implement this in my project?
-#### With **Git**:
+* [How to use](#how-to-use-console)
+* [Adding commands](#how-to-add-commands-to-console)
+* [Shortcuts](#shortcuts)
+* [Installation](#installation)
+
+## How to use console?
+1. In Flax Editor go to `Journal/Source/Journal/` and place `ConsoleManager.cs` script in the scene where u want (for example in **Scene** actor)
+2. Go to `Journal/Content/` drag `ConsolePrefab` into "ConsolePrefab" field in script
+3. If you want to customize console UI:
+   1. Go to `Journal/Content/` in editor and drag `ConsolePrefab` on to the scene
+   2. In ConsoleManager script set `CreateConsoleFromPrefab` unchecked
+   3. Drag console actor to `ConsoleActor` field
+  
+## How to add commands to console?
+Like this:
+```cs
+using FlaxEngine;
+using Journal;
+
+namespace Game
+{
+  public class Test : Script 
+  {
+    public override void OnStart() 
+    {
+      ConsoleManager.RegisterCommand("quit", Quit); // <---
+    }
+  }
+  
+  public void Quit()
+  {
+    //Do something here and quit
+  }
+}
+```
+## Shortcuts
+- **Tab**: Selecting hints when editing
+- **Arrow Up**: Get previous commands
+- **Arrow Down**: Get recent commands
+
+## Installation
+### With Flax Plugin Manager:
+1. Download, unpack & run **Flax Plugin Manager** [[Click here](https://github.com/Crawcik/FlaxPluginManager/releases/latest)]
+2. Select your project & add Journal
+### With Git:
 1. Use this command somewhere in your project folder `git submodule add https://github.com/Crawcik/Journal/`<br> (for example `<your-flax-project-path>/Plugins/Journal/`)
 3. To update Journal use `git submodule update`. If something goes wrong add `--init` at the end of the command
-#### Normal way:
+### Normal way:
 1. Download this project .zip or .tar.gz
-2. Put in folder near your project (for example `<your-flax-project-path>/Plugins/Journal/`)
+2. Unpack it in folder near your project (for example `<your-flax-project-path>/Plugins/Journal/`)
 #### 
 3. Add in your `.flaxproj` file path to plugin, like in this example:
 ```json
@@ -35,34 +78,3 @@ public override void Setup(BuildOptions options)
 5. If something doesn't work: check logs, try deleting `Cache` folder or generate project files manually
   
 Also here is official tutorial for installing plugins: https://docs.flaxengine.com/manual/scripting/plugins/plugin-project.html
-  
-## How to use console?
-1. In Flax Editor go to `Journal/Source/Journal/` and place `ConsoleManager.cs` script in the scene where u want (for example in **Scene** actor)
-2. Go to `Journal/Content/` drag `ConsolePrefab` into "ConsolePrefab" field in script
-3. If you want to customize console UI:
-   1. Go to `Journal/Content/` in editor and drag `ConsolePrefab` on to the scene
-   2. In ConsoleManager script set "CreateConsoleFromPrefab" unchecked
-   3. Drag console actor to "ConsoleActor" field
-  
-## How to add commands to console?
-Like this:
-```cs
-using FlaxEngine;
-using Journal;
-
-namespace Game
-{
-  public class Test : Script 
-  {
-    public override void OnStart() 
-    {
-      ConsoleManager.RegisterCommand("quit", Quit); // <---
-    }
-  }
-  
-  public void Quit()
-  {
-    //Do something here and quit
-  }
-}
-```
