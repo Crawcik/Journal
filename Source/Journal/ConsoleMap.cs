@@ -14,7 +14,7 @@ namespace Journal
         private const float _baseInputHeight = 10f;
         private const float _baseScrollWidth = 15f;
         private const int _baseFontSize = 5;
-        private const int _baseMaxHints = 5;
+        private const int _baseMaxHints = 16;
         #endregion
 
         #region Fields
@@ -159,7 +159,7 @@ namespace Journal
                 else if (text == ">_")
                     _inputTextBox.Text = ">";
             }
-            if (_inputTextBox.IsEditing)
+            if (_inputTextBox.IsFocused)
             {
                 if (_inputTextBox.Text == ">_")
                     _inputTextBox.SetText(">");
@@ -301,8 +301,9 @@ namespace Journal
         {
             if (_inputTextBox is null || _hintBox is null || _readOnly || !ShowHints)
                 return;
-            if ((_inputTextBox.Text == ">" && _inputTextBox.Text.Length == 1) || _inputTextBox.Text == ">_")
+            if (_inputTextBox.Text == ">" || _inputTextBox.Text == ">_" || _inputTextBox.Text.Length < 2)
             {
+                _hintList = new List<(string, string)>();
                 _hintBoxControl.Visible = false;
                 return;
             }
@@ -311,16 +312,12 @@ namespace Journal
             bool refresh = commands.Except(_hintList).Any() || _hintList.Except(commands).Any();
             _hintList = commands;
             if (!refresh)
-            {
-                _hintList = commands;
                 return;
-            }
             if (commands.Count() == 0)
             {
                 _hintBoxControl.Visible = false;
                 return;
             }
-            _hintList = commands;
             _hintBoxControl.DisposeChildren();
             Label longestLabel = null;
             int i = 0;
@@ -329,6 +326,7 @@ namespace Journal
                 HintLabel label = _hintBoxControl.AddChild<HintLabel>();
                 label.Font.Size = _baseFontSize * _uiScale;
                 label.AutoWidth = true;
+                label.AutoHeight = true;
                 label.HorizontalAlignment = TextAlignment.Near;
                 label.SetHint(command);
                 label.TextColorHighlighted = Color.Yellow;
@@ -342,12 +340,12 @@ namespace Journal
                 if (label.Text.Value.Length > longestLabel.Text.Value.Length)
                     longestLabel = label;
                 i++;
-                if (i >= _baseFontSize * _uiScale)
+                if (i >= _baseMaxHints / _uiScale)
                     break;
             }
             Vector2 size = longestLabel.Font.GetFont().MeasureText(longestLabel.Text);
-            _hintBoxControl.Width = size.X + _baseFontSize * _uiScale;
-            _hintBoxControl.Height = size.Y * i * 1.375f;
+            _hintBoxControl.Width = size.X + 2f;
+            _hintBoxControl.Height = i * (longestLabel.Height + _hintBoxControl.Spacing);
             _hintBoxControl.Location = new Vector2(0f, _outputHeight - _hintBoxControl.Height);
             _hintBoxControl.Visible = true;
         }
