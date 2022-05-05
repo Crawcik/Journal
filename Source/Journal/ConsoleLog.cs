@@ -3,15 +3,20 @@ using FlaxEngine.GUI;
 
 namespace Journal
 {
+	/// <summary>
+	/// Console log entity.
+	/// </summary>
 	public class ConsoleLog
 	{
-
 		#region Fields
 		public readonly string Text;
 		public readonly LogType Level;
 		private UIControl _uiElement;
 		#endregion
 
+		/// <summary>
+		/// UI label reference.
+		/// </summary>
 		public Label Label { get; private set; }
 
 		public ConsoleLog(string text, LogType level)

@@ -1,8 +1,8 @@
 {
 	"Name": "Journal",
-	"Version": "1.0",
+	"Version": "1.1",
 	"Company": "Crawcik",
-	"Copyright": "",
+	"Copyright": "MIT License (c) 2021 Crawcik",
 	"GameTarget": "JournalTarget",
 	"EditorTarget": "JournalEditorTarget",
 	"References": [
