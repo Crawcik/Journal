@@ -26,12 +26,13 @@ namespace Journal
 		}
 
 		#region Methods
-		internal void Spawn(UIControl parent, float width, float y, int fontSize)
+		internal void Spawn(UIControl parent, float width, float y, FontReference font)
 		{
-			if (_uiElement is object && parent is null)
+			if (_uiElement is object || parent is null)
 				return;
 			Label = new Label(0f, 0f, width, 0f)
 			{
+				Font = font,
 				Text = new LocalizedString(Text),
 				TextColor = GetColor(),
 				HorizontalAlignment = TextAlignment.Near,
@@ -42,7 +43,6 @@ namespace Journal
 				Pivot = new Vector2(0f, 0f),
 				BackgroundColor = new Color(0, 0, 0, 40)
 			};
-			Label.Font.Size = fontSize;
 			_uiElement = Object.New<UIControl>();
 			_uiElement.Control = Label;
 			_uiElement.Parent = parent;

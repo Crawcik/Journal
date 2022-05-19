@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using FlaxEngine;
+using FlaxEngine.GUI;
 
 namespace Journal
 {
@@ -18,6 +19,8 @@ namespace Journal
 		public UICanvas ConsoleActor;
 		[EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", false)]
 		public Prefab ConsolePrefab;
+		[EditorOrder(-985)]
+		public FontAsset Font;
 		[EditorOrder(-980)]
 		public KeyboardKeys OpenCloseButton = KeyboardKeys.BackQuote;
 		[EditorOrder(-970)]
@@ -31,7 +34,6 @@ namespace Journal
 		public static bool IsOpen => Singleton.Map.Actor.IsActive;
 		public static ConsoleManager Singleton { get; private set; }
 		public ConsoleMap Map { get; private set; }
-
 		internal IReadOnlyList<Command> Commands => _commands;
 		
 		#endregion
@@ -51,7 +53,7 @@ namespace Journal
 				Enabled = false;
 				return;
 			}
-
+			Map.Font = Font;
 			Map.Actor.IsActive = false;
 			Singleton = this;
 			_commands = new List<Command>();

@@ -25,10 +25,11 @@ namespace Journal
 		public UIControl OutputPanel;
 		[EditorOrder(-980)]
 		public UIControl ScrollBar;
-		[EditorOrder(-977)]
+		[EditorOrder(-975)]
 		public byte MaxConsoleLogCount = 200;
 		[EditorOrder(-950)]
 		public bool ShowHints = true;
+		private FontReference _font;
 		private Queue<ConsoleLog> _logs;
 		private IEnumerable<(string, string)> _hintList;
 		private TextBox _inputTextBox;
@@ -60,7 +61,8 @@ namespace Journal
 				Realign();
 			}
 		}
-		[EditorOrder(-970), ShowInEditor, Range(1, 8)]
+
+		[EditorOrder(-960), ShowInEditor, Range(1, 8)]
 		public int UIScale
 		{
 			get => _uiScale;
@@ -70,7 +72,8 @@ namespace Journal
 				Realign();
 			}
 		}
-		[EditorOrder(-960), ShowInEditor]
+
+		[EditorOrder(-970), ShowInEditor]
 		public bool ReadOnly
 		{
 			get => _readOnly;
@@ -80,13 +83,30 @@ namespace Journal
 				Realign();
 			}
 		}
+
 		[HideInEditor, NoSerialize]
 		public float ScrollPosition 
 		{
 			get => -_outputPanel.ViewOffset.Y;
 			set => _outputPanel.ViewOffset = new Vector2(0f, -value);
 		}
+		
+		[HideInEditor, NoSerialize]
+		public FontAsset Font 
+		{
+			get => _font.Font;
+			set
+			{
+				if (_font is null && value is object)
+				{
+					_font = new FontReference(value, _baseFontSize * _uiScale);
+					Realign();
+				}
+
+			}
+		}
 		public float PanelWidth => _outputPanel.Width;
+
 		public int FontSize { get; private set; }
 		#endregion
 
@@ -145,9 +165,9 @@ namespace Journal
 		public override void OnLateUpdate()
 		{
 			Vector2 screenSize = Screen.Size;
-			#if FLAX_EDITOR
+#if FLAX_EDITOR
 			screenSize /= FlaxEditor.Editor.Instance.Options.Options.Interface.InterfaceScale;
-			#endif
+#endif
 			string text = _inputTextBox.Text.Trim();
 			float scrollDelta = Input.MouseScrollDelta;
 			_lastAnimationTime += Time.DeltaTime;
@@ -217,7 +237,11 @@ namespace Journal
 			float inputHeight = _readOnly ? 0f : (_baseInputHeight * _uiScale);
 			float scrollBarWidth = _baseScrollWidth * (_uiScale * 0.75f);
 			float outputWidth = _currentScreenSize.X - scrollBarWidth;
-			int fontSize = _baseFontSize * _uiScale;
+			if(_font is object)
+			{
+				_inputTextBox.Font = _font;
+				_font.Size = _baseFontSize * _uiScale;
+			}
 			_outputHeight = containerHeight - inputHeight;
 
 			if (_readOnly || _inputTextBox is null)
@@ -229,12 +253,10 @@ namespace Journal
 				_inputTextBox.Visible = true;
 				_inputTextBox.Location = new Vector2(0f, _outputHeight);
 				_inputTextBox.Size = new Vector2(_currentScreenSize.X, inputHeight);
-				_inputTextBox.Font.Size = fontSize;
 				_hintBoxControl.Location = new Vector2(0f, _outputHeight - _hintBoxControl.Height);
 			}
 			_outputPanel.Location = Vector2.Zero;
 			_outputPanel.Size = new Vector2(outputWidth, _outputHeight);
-			FontSize = fontSize;
 			RealignLogs(true);
 
 			if (_scrollBar is null)
@@ -251,7 +273,7 @@ namespace Journal
 		/// </summary>
 		public void AddLog(ConsoleLog newLog)
 		{
-			newLog.Spawn(OutputPanel, PanelWidth, _last, FontSize);
+			newLog.Spawn(OutputPanel, PanelWidth, _last, _font);
 			_logs.Enqueue(newLog);
 			_last += newLog.Label.Height + 2f;
 			if (_logs.Count > MaxConsoleLogCount)
@@ -343,7 +365,7 @@ namespace Journal
 			foreach ((string, string) command in commands)
 			{
 				HintLabel label = _hintBoxControl.AddChild<HintLabel>();
-				label.Font.Size = _baseFontSize * _uiScale;
+				label.Font = _font;
 				label.AutoWidth = true;
 				label.AutoHeight = true;
 				label.HorizontalAlignment = TextAlignment.Near;
