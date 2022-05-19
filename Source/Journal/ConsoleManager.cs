@@ -28,6 +28,7 @@ namespace Journal
 		#endregion
 
 		#region Properties
+		public static bool IsOpen => Singleton.Map.Actor.IsActive;
 		public static ConsoleManager Singleton { get; private set; }
 		public ConsoleMap Map { get; private set; }
 
@@ -237,7 +238,7 @@ namespace Journal
 		private void Dispose()
 		{
 			Debug.Logger.LogHandler.SendLog -= OnDebugLog;
-			Map.Clear();
+			Map?.Clear();
 #if FLAX_EDITOR
 			FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored -= Dispose;
 #endif

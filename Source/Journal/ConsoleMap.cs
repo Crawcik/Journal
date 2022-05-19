@@ -145,6 +145,9 @@ namespace Journal
 		public override void OnLateUpdate()
 		{
 			Vector2 screenSize = Screen.Size;
+			#if FLAX_EDITOR
+			screenSize /= FlaxEditor.Editor.Instance.Options.Options.Interface.InterfaceScale;
+			#endif
 			string text = _inputTextBox.Text.Trim();
 			float scrollDelta = Input.MouseScrollDelta;
 			_lastAnimationTime += Time.DeltaTime;

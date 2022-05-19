@@ -15,7 +15,9 @@
 				"W": 1.910685465164705e-15
 			}
 		},
-		"V": {}
+		"V": {
+	"Order": 1000
+}
 	},
 	{
 		"ID": "6c70613c48f3bb0c1583218ebe719dfd",
@@ -136,7 +138,8 @@
 		"A": 1.0
 	},
 	"Enabled": true,
-	"Visible": true
+	"Visible": true,
+	"AutoFocus": true
 }
 	},
 	{
@@ -191,7 +194,8 @@
 		"A": 0.7
 	},
 	"Enabled": true,
-	"Visible": true
+	"Visible": true,
+	"AutoFocus": false
 }
 	},
 	{
@@ -250,7 +254,8 @@
 		"A": 0.85
 	},
 	"Enabled": true,
-	"Visible": true
+	"Visible": true,
+	"AutoFocus": false
 }
 	}
 ]

@@ -1,26 +1,48 @@
-# Flax Engine
+# Ignore Flax project files
 Binaries/
 Cache/
 Logs/
 Output/
 Screenshots/
-Source/*.csproj
 *.HotReload.*
 
-# Visual Studio files
-.vs/
+# Ignore project files (generated locally)
+*.csproj
 *.sln
-*.sln.docstates
-*.suo
-*.user
-
-# Visual Studio Code files
-*.vcxproj.filters
-.vscode/
-.history/
 *.code-workspace
 
-#IDE files
-packages/
-bin/
+# Ignore thumbnails created by Windows
+Thumbs.db
+
+# Ignore files built by editors
+*.obj
+*.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+[Bb]in
+[Dd]ebug*/
+*.lib
+*.sbr
 obj/
+[Rr]elease*/
+_ReSharper*/
+[Tt]est[Rr]esult*
+.vs/
+.idea/
+.vscode/
+
+# Ignore Nuget packages folder
+packages/
