@@ -31,7 +31,7 @@ namespace Journal
 		public bool ShowHints = true;
 		private FontReference _font;
 		private Queue<ConsoleLog> _logs;
-		private IEnumerable<(string, string)> _hintList;
+		private IEnumerable<Hint> _hintList;
 		private TextBox _inputTextBox;
 		private ScrollableControl _outputPanel;
 		private Control _scrollBar;
@@ -125,7 +125,7 @@ namespace Journal
 			}
 			if (_inputTextBox is object)
 			{
-				_hintList = new List<(string, string)>();
+				_hintList = new List<Hint>();
 				_hintBox = new UIControl {
 					Name = "Hints",
 					Parent = Actor,
@@ -340,16 +340,16 @@ namespace Journal
 			_hintSelectIndex = -1;
 			if (_inputTextBox.Text == ">" || _inputTextBox.Text == ">_" || _inputTextBox.Text.Length < 2)
 			{
-				_hintList = new List<(string, string)>();
+				_hintList = new List<Hint>();
 				_hintBoxControl.Visible = false;
 				return;
 			}
 			string text = _inputTextBox.Text.Remove(0, 1);
-			IEnumerable<(string, string)> commands = ConsoleManager.Singleton.Commands
+			IEnumerable<Hint> commands = ConsoleManager.Singleton.Commands
 				.Where(x => x.Name.StartsWith(text))
-				.Select(x => (x.Name, string.Join(" ", x.Parameters
+				.Select(x => new Hint(x.Name, string.Join(" ", x.Parameters
 					.Select(y => $"[{y.Name}: {y.ParameterType.Name}]")
-				))).OrderBy(x => x.Item1);
+				))).OrderBy(x => x.Name);
 			bool refresh = commands.Except(_hintList).Any() || _hintList.Except(commands).Any();
 			_hintList = commands;
 			if (!refresh)
@@ -362,7 +362,7 @@ namespace Journal
 			_hintBoxControl.DisposeChildren();
 			Label longestLabel = null;
 			int i = 0;
-			foreach ((string, string) command in commands)
+			foreach (Hint command in commands)
 			{
 				HintLabel label = _hintBoxControl.AddChild<HintLabel>();
 				label.Font = _font;
@@ -375,7 +375,7 @@ namespace Journal
 					_inputTextBox.SetText(">" + x);
 					_inputTextBox.SelectionRange = new TextRange(x.Length + 1, x.Length + 1);
 				};
-				longestLabel ??= label;
+				longestLabel = longestLabel ?? label;
 				if (label.Text.Value.Length > longestLabel.Text.Value.Length)
 					longestLabel = label;
 				i++;
@@ -424,5 +424,17 @@ namespace Journal
 			_inputTextBox.SetText(">");
 		}
 		#endregion
+	}
+
+	public readonly struct Hint
+	{
+		public readonly string Name;
+		public readonly string Parameters;
+
+		public Hint(string name, string parameters) : this()
+		{
+			this.Name = name;
+			this.Parameters = parameters;
+		}
 	}
 }

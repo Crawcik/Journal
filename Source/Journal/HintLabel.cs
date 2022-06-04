@@ -19,10 +19,10 @@ namespace Journal
 		/// <summary>
 		/// Sets hint parameter and text
 		/// </summary>
-		public void SetHint((string, string) hint)
+		public void SetHint(Hint hint)
 		{
-			Text = string.Join(" ", hint.Item1, hint.Item2);
-			_hintText = hint.Item1;
+			Text = string.Join(" ", hint.Name, hint.Parameters);
+			_hintText = hint.Name;
 		}
 
 		/// <summary>
