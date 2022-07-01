@@ -1,4 +1,7 @@
-# Journal - Console for Flax Engine with command handling
+# <p align="center">Journal</p>
+## Console for Flax Engine with command handling
+[![GitHub release](https://img.shields.io/github/release/Crawcik/Journal?style=for-the-badge)](https://github.com/Crawcik/Journal/releases)
+[![Github license](https://img.shields.io/github/license/Crawcik/Journal?style=for-the-badge)](https://github.com/Crawcik/Journal/blob/master/LICENSE.md)
 
 * [How to use](#how-to-use-console)
 * [Adding commands](#how-to-add-commands-to-console)
@@ -21,18 +24,19 @@ using Journal;
 
 namespace Game
 {
-  public class Test : Script 
-  {
-    public override void OnStart() 
-    {
-      ConsoleManager.RegisterCommand("quit", Quit); // <---
-    }
-  }
+	public class Test : Script 
+	{
+ 		public override void OnStart() 
+		{
+			ConsoleManager.RegisterCommand("hello", Hello); // <---
+		}
   
-  public void Quit()
-  {
-    //Do something here and quit
-  }
+		public void Hello()
+		{
+			Debug.Log("Hello, world!");
+			// Do something here
+		}
+	}
 }
 ```
 ## Shortcuts
@@ -45,12 +49,11 @@ namespace Game
 1. Download, unpack & run **Flax Plugin Manager** [[Click here](https://github.com/Crawcik/FlaxPluginManager/releases/latest)]
 2. Select your project & add Journal
 ### With Git:
-1. Use this command somewhere in your project folder `git submodule add https://github.com/Crawcik/Journal/`<br> (for example `<your-flax-project-path>/Plugins/Journal/`)
-3. To update Journal use `git submodule update`. If something goes wrong add `--init` at the end of the command
+1. Use this command somewhere in your project folder `git clone https://github.com/Crawcik/Journal.git`<br /> (for example in `<your-flax-project-path>/Plugins/`)
+
 ### Normal way:
 1. Download this project .zip or .tar.gz
 2. Unpack it in folder near your project (for example `<your-flax-project-path>/Plugins/Journal/`)
-#### 
 3. Add in your `.flaxproj` file path to plugin, like in this example:
 ```json
 {
@@ -70,9 +73,9 @@ namespace Game
 ```cs
 public override void Setup(BuildOptions options)
 {
-  base.Setup(options);
-  
-  options.PrivateDependencies.Add("Journal"); // Adds reference to Journal types
+	base.Setup(options);
+
+	options.PrivateDependencies.Add("Journal"); // Adds reference to Journal types
 }
 ```
 5. If something doesn't work: check logs, try deleting `Cache` folder or generate project files manually
