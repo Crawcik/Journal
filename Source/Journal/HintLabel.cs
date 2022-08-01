@@ -63,7 +63,11 @@ namespace Journal
 		}
 
 		/// <inheritdoc />
+		#if FLAX_1_3 || FLAX_1_2 || FLAX_1_1 || FLAX_1_0
 		public override bool OnMouseDown(Vector2 location, MouseButton button)
+		#else
+		public override bool OnMouseDown(Float2 location, MouseButton button)
+		#endif
 		{
 			if (base.OnMouseDown(location, button))
 				return true;
@@ -77,7 +81,11 @@ namespace Journal
 		}
 
 		/// <inheritdoc />
+		#if FLAX_1_3 || FLAX_1_2 || FLAX_1_1 || FLAX_1_0
 		public override bool OnMouseUp(Vector2 location, MouseButton button)
+		#else
+		public override bool OnMouseUp(Float2 location, MouseButton button)
+		#endif
 		{
 			if (base.OnMouseUp(location, button))
 				return true;
@@ -92,7 +100,11 @@ namespace Journal
 		}
 
 		/// <inheritdoc />
+		#if FLAX_1_3 || FLAX_1_2 || FLAX_1_1 || FLAX_1_0
 		public override bool OnTouchDown(Vector2 location, int pointerId)
+		#else
+		public override bool OnTouchDown(Float2 location, int pointerId)
+		#endif
 		{
 			if (base.OnTouchDown(location, pointerId))
 				return true;
@@ -106,7 +118,11 @@ namespace Journal
 		}
 
 		/// <inheritdoc />
+		#if FLAX_1_3 || FLAX_1_2 || FLAX_1_1 || FLAX_1_0
 		public override bool OnTouchUp(Vector2 location, int pointerId)
+		#else
+		public override bool OnTouchUp(Float2 location, int pointerId)
+		#endif
 		{
 			if (base.OnTouchUp(location, pointerId))
 				return true;

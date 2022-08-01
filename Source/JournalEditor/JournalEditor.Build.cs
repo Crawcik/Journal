@@ -1,6 +1,7 @@
 ﻿using Flax.Build;
 using Flax.Build.NativeCpp;
 
+/// <inheritdoc />
 public class JournalEditor : GameEditorModule
 {
     /// <inheritdoc />
