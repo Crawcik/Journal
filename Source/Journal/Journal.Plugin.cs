@@ -13,7 +13,7 @@ namespace Journal
 		public override PluginDescription Description => new PluginDescription()
         {
             Name = "Journal",
-            Category = "Console",
+            Category = "Utility",
             Author = "Crawcik",
             AuthorUrl = "https://github.com/Crawcik",
             HomepageUrl = "https://github.com/Crawcik/Journal",
@@ -29,7 +29,7 @@ namespace Journal
             _description = new PluginDescription()
             {
                 Name = "Journal",
-                Category = "Console",
+                Category = "Utility",
                 Author = "Crawcik",
                 AuthorUrl = "https://github.com/Crawcik",
                 HomepageUrl = "https://github.com/Crawcik/Journal",
