@@ -48,6 +48,17 @@ namespace Journal
 				Destroy(this);
 				return;
 			}
+			if (DontDestroyOnLoad && this.Scene.Name != "DontDestroyOnLoad")
+			{
+				var scene = new Scene()
+				{
+					Name = "DontDestroyOnLoad",
+					StaticFlags = StaticFlags.FullyStatic
+				};
+				var bytes = Level.SaveSceneToBytes(scene, prettyJson: false);
+				scene = Level.LoadSceneFromBytes(bytes);
+				this.Actor.Parent = scene;
+			}
 			if (!CheckSettings())
 			{
 				Enabled = false;
@@ -120,8 +131,14 @@ namespace Journal
 				Debug.LogError("Command not found!");
 				return;
 			}
-			
-			command.MethodInfo.Invoke(command.Target, paramArray);
+			try
+			{
+				command.MethodInfo.Invoke(command.Target, paramArray);
+			}
+			catch (Exception exception)
+			{
+				Debug.LogError(exception);
+			}
 		}
 
 		/// <summary>
