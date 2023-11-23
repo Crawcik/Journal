@@ -1,7 +1,7 @@
 {
 	"ID": "51e5a50e4bfb8c4e2d9fb3a0a5353e73",
 	"TypeName": "FlaxEngine.Prefab",
-	"EngineBuild": 6226,
+	"EngineBuild": 6404,
 	"Data": [
 	{
 		"ID": "c38f93ab432eed1c249d81843f708001",
@@ -46,8 +46,8 @@
 	"WatermarkText": null,
 	"Wrapping": 0,
 	"Font": {
-		"Font": "4508d98f4aa1f0bd59362b81d47e38f4",
-		"Size": 16
+		"Font": "08dbebac01484d3de78ddfb0d9ad4bea",
+		"Size": 16.0
 	},
 	"TextMaterial": null,
 	"TextColor": {
@@ -57,24 +57,28 @@
 		"A": 1.0
 	},
 	"WatermarkTextColor": {
-		"R": 0.470588237,
-		"G": 0.470588237,
+		"R": 0.47058824,
+		"G": 0.47058824,
 		"B": 0.5137255,
 		"A": 1.0
 	},
 	"SelectionColor": {
 		"R": 0.0,
-		"G": 0.478431374,
+		"G": 0.47843137,
 		"B": 0.8,
 		"A": 1.0
 	},
+	"EndEditOnClick": true,
 	"IsMultiline": false,
 	"MaxLength": 300,
 	"IsReadOnly": false,
+	"IsSelectable": true,
+	"ClipText": true,
+	"IsMultilineScrollable": true,
 	"BackgroundSelectedColor": {
-		"R": 0.247058824,
-		"G": 0.247058824,
-		"B": 0.274509817,
+		"R": 0.24705882,
+		"G": 0.24705882,
+		"B": 0.27450982,
 		"A": 1.0
 	},
 	"CaretColor": {
@@ -85,15 +89,17 @@
 	},
 	"CaretFlashSpeed": 6.0,
 	"BackgroundSelectedFlashSpeed": 6.0,
+	"HasBorder": true,
+	"BorderThickness": 1.0,
 	"BorderColor": {
-		"R": 0.00100004673,
-		"G": 0.000111046851,
-		"B": 0.000121657693,
+		"R": 0.0010000467,
+		"G": 0.00011104685,
+		"B": 0.00012165769,
 		"A": 0.0
 	},
 	"BorderSelectedColor": {
 		"R": 0.0,
-		"G": 0.478431374,
+		"G": 0.47843137,
 		"B": 0.8,
 		"A": 1.0
 	},
@@ -134,7 +140,7 @@
 	"BackgroundColor": {
 		"R": 0.2,
 		"G": 0.2,
-		"B": 0.215686277,
+		"B": 0.21568628,
 		"A": 1.0
 	},
 	"Enabled": true,
