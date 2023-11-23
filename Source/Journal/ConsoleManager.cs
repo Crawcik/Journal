@@ -225,7 +225,7 @@ namespace Journal
 					Debug.LogError("Console prefab is not set!");
 					return false;
 				}
-				ConsoleActor = (UICanvas)PrefabManager.SpawnPrefab(ConsolePrefab);
+				ConsoleActor = (UICanvas)PrefabManager.SpawnPrefab(ConsolePrefab, Scene);
 			}
 			if (ConsoleActor is null)
 			{
