@@ -220,7 +220,7 @@ namespace Journal
 					float offset = (control.Size / 2f).Y;
 					float position = (Input.MousePosition - (control.Pivot * control.Size)).Y;
 					position = Mathf.Clamp(position, offset, _outputHeight - offset) - offset;
-					ScrollPosition = Mathf.Map(position + offset, offset, _outputHeight - offset, 0f, _last - _outputHeight);
+					ScrollPosition = Mathf.Remap(position + offset, offset, _outputHeight - offset, 0f, _last - _outputHeight);
 					_scrollBarGrip.Position = new Vector3(_scrollBarGrip.Position.X, position, 0f);
 				}
 			}

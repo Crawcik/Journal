@@ -2,6 +2,7 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("Journal")]
 [assembly: AssemblyDescription("")]
@@ -15,3 +16,4 @@ using System.Runtime.InteropServices;
 [assembly: Guid("4f876200-6200-4f87-a9d8-473a2f465b78")]
 [assembly: AssemblyVersion("1.1")]
 [assembly: AssemblyFileVersion("1.1")]
+[assembly: DisableRuntimeMarshalling]
