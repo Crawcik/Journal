@@ -1,7 +1,7 @@
 {
 	"ID": "51e5a50e4bfb8c4e2d9fb3a0a5353e73",
 	"TypeName": "FlaxEngine.Prefab",
-	"EngineBuild": 6404,
+	"EngineBuild": 6606,
 	"Data": [
 	{
 		"ID": "c38f93ab432eed1c249d81843f708001",
@@ -24,7 +24,7 @@
 		"TypeName": "Journal.ConsoleMap",
 		"ParentID": "c38f93ab432eed1c249d81843f708001",
 		"V": {
-	"InputTextBox": "902ce8b549cc79630e308e966d307c2a",
+	"InputField": "902ce8b549cc79630e308e966d307c2a",
 	"OutputPanel": "e5e19d3e4689a287ed77b1926d4e4af9",
 	"ScrollBar": "c1c7959a438941534c13139fca46d23f"
 }
@@ -43,10 +43,17 @@
 		},
 		"Control": "Journal.CommandTextBox",
 		"Data": {
+	"ObfuscateText": false,
+	"ObfuscateCharacter": "●",
 	"WatermarkText": null,
+	"CaseOption": 0,
+	"Bold": false,
+	"Italic": false,
+	"VerticalAlignment": 1,
+	"HorizontalAlignment": 0,
 	"Wrapping": 0,
 	"Font": {
-		"Font": "08dbebac01484d3de78ddfb0d9ad4bea",
+		"Font": null,
 		"Size": 16.0
 	},
 	"TextMaterial": null,
@@ -143,6 +150,7 @@
 		"B": 0.21568628,
 		"A": 1.0
 	},
+	"BackgroundBrush": null,
 	"Enabled": true,
 	"Visible": true,
 	"AutoFocus": true
@@ -163,6 +171,24 @@
 		"Right": 0.0,
 		"Top": 0.0,
 		"Bottom": 0.0
+	},
+	"ScrollbarTrackColor": {
+		"R": 0.32941177,
+		"G": 0.32941177,
+		"B": 0.36078432,
+		"A": 1.0
+	},
+	"ScrollbarThumbColor": {
+		"R": 0.24705882,
+		"G": 0.24705882,
+		"B": 0.27450982,
+		"A": 1.0
+	},
+	"ScrollbarThumbSelectedColor": {
+		"R": 0.0,
+		"G": 0.47843137,
+		"B": 0.8,
+		"A": 1.0
 	},
 	"ClipChildren": true,
 	"CullChildren": true,
@@ -199,6 +225,7 @@
 		"B": 0.2,
 		"A": 0.7
 	},
+	"BackgroundBrush": null,
 	"Enabled": true,
 	"Visible": true,
 	"AutoFocus": false
@@ -259,6 +286,7 @@
 		"B": 0.2,
 		"A": 0.85
 	},
+	"BackgroundBrush": null,
 	"Enabled": true,
 	"Visible": true,
 	"AutoFocus": false

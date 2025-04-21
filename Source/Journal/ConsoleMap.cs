@@ -38,9 +38,6 @@ namespace Journal
 		private UIControl _scrollBarGripUIControl;
 		private UIControl _hintBoxUIControl;
 		private VerticalPanel _hintBoxPanel;
-		private Control _scrollBar;
-		private TextBox _inputTextBox;
-		private ScrollableControl _outputPanel;
 
 		// UI sizes
 		private float _consoleHeight = 0.4f;
@@ -57,13 +54,12 @@ namespace Journal
 			{
 				if (_inputUIControl == value)
 					return;
-				if (!(value is null || value.Control is TextBox))
+				if (!(value is null || value.Control is null || value.Control is TextBox))
 				{
 					Debug.LogWarning("InputField can only be a \"TextBox\" control");
 					return;
 				}
 				_inputUIControl = value;
-				_inputTextBox = (TextBox)value.Control;
 			}
 		}
 
@@ -75,13 +71,12 @@ namespace Journal
 			{
 				if (_outputUIControl == value)
 					return;
-				if (!(value is null || value.Control is ScrollableControl))
+				if (!(value is null || value.Control is null || value.Control is ScrollableControl))
 				{
 					Debug.LogWarning("OutputPanel can only be a \"ScrollableControl\" control");
 					return;
 				}
 				_outputUIControl = value;
-				_outputPanel = (ScrollableControl)value.Control;
 
 			}
 		}
@@ -94,13 +89,12 @@ namespace Journal
 			{
 				if (_inputUIControl == value)
 					return;
-				if (!(value is null || value.Control is Spacer))
+				if (!(value is null || value.Control is null || value.Control is Spacer))
 				{
 					Debug.LogWarning("ScrollBar can only be a \"Spacer\" control");
 					return;
 				}
 				_scrollBarUIControl = value;
-				_scrollBar = (Spacer)value.Control;
 			}
 		}
 
@@ -143,8 +137,8 @@ namespace Journal
 		[HideInEditor, NoSerialize]
 		public float ScrollPosition 
 		{
-			get => -_outputPanel.ViewOffset.Y;
-			set => _outputPanel.ViewOffset = new Vector2(0f, -value);
+			get => -OutputPanelControl.ViewOffset.Y;
+			set => OutputPanelControl.ViewOffset = new Vector2(0f, -value);
 		}
 		
 		[HideInEditor, NoSerialize]
@@ -161,9 +155,13 @@ namespace Journal
 
 			}
 		}
-		public float PanelWidth => _outputPanel.Width;
+		public float PanelWidth => OutputPanelControl.Width;
 
 		public int FontSize { get; private set; }
+
+		private Spacer ScrollBarControl => (Spacer)_scrollBarUIControl.Control;
+		private TextBox InputTextBox => (TextBox)_inputUIControl.Control;
+		private ScrollableControl OutputPanelControl => (ScrollableControl)_outputUIControl.Control;
 		#endregion
 
 		#region Methods
@@ -176,13 +174,13 @@ namespace Journal
 			_scrollBar = ScrollBar?.Control;
 			*/
 			reallign = false;
-			if (_outputPanel is null)
+			if (OutputPanelControl is null)
 			{
 				Debug.LogError("Fields in \"Command map\" are empty!");
 				Enabled = false;
 				return;
 			}
-			if (_inputTextBox is object)
+			if (InputTextBox is object)
 			{
 				_hintList = new List<Hint>();
 				_hintBoxUIControl = new UIControl {
@@ -191,26 +189,26 @@ namespace Journal
 					Control = _hintBoxPanel = new VerticalPanel {
 						Visible = false,
 						AutoSize = false,
-						BackgroundColor = _inputTextBox.BackgroundColor + new Color(30, 30, 30, 0),
+						BackgroundColor = InputTextBox.BackgroundColor + new Color(30, 30, 30, 0),
 						Pivot = new Vector2(0f, 0f),
 					}
 				};
-				_inputTextBox.TextChanged += OnTextChanged;
-				if (_inputTextBox is CommandTextBox commandTextBox)
+				InputTextBox.TextChanged += OnTextChanged;
+				if (InputTextBox is CommandTextBox commandTextBox)
 				{
 					commandTextBox.OnCommand += OnCommand;
 					commandTextBox.OnHintChange += OnHintChange;
 				}
 				else
 				{
-					_inputTextBox.EditEnd += OnEditEnd;
+					InputTextBox.EditEnd += OnEditEnd;
 				}
 			}
-			if (_scrollBar is object)
+			if (ScrollBarControl is object)
 			{
 				_scrollBarGripUIControl = ScrollBar.AddChildControl<Spacer>();
 				Control control = _scrollBarGripUIControl.Control;
-				control.BackgroundColor = _scrollBar.BackgroundColor + new Color(30, 30, 30, 0);
+				control.BackgroundColor = ScrollBarControl.BackgroundColor + new Color(30, 30, 30, 0);
 				control.Pivot = Vector2.Zero;
 				control.LocalLocation = Vector2.Zero;
 				RealignScrollBar();
@@ -227,13 +225,13 @@ namespace Journal
 #if FLAX_EDITOR
 			screenSize /= FlaxEditor.Editor.Instance.Options.Options.Interface.InterfaceScale;
 #endif
-			string text = _inputTextBox.Text.Trim();
+			string text = InputTextBox.Text.Trim();
 			float scrollDelta = Input.MouseScrollDelta;
 			_lastAnimationTime += Time.DeltaTime;
-			if (_outputPanel.IsMouseOver && scrollDelta != 0f)
+			if (OutputPanelControl.IsMouseOver && scrollDelta != 0f)
 			{
 				ScrollPosition =  Mathf.Clamp(ScrollPosition - scrollDelta * 20f, 0f, _last - _outputHeight);
-				if (_scrollBar != null)
+				if (ScrollBarControl != null)
 					RealignScrollBar();
 			}
 			if (screenSize != _currentScreenSize)
@@ -247,29 +245,29 @@ namespace Journal
 
 				//Console waiting animation
 				if (text == ">" || text == string.Empty)
-					_inputTextBox.Text = ">_";
+					InputTextBox.Text = ">_";
 				else if (text == ">_")
-					_inputTextBox.Text = ">";
+					InputTextBox.Text = ">";
 			}
-			if (_inputTextBox.IsFocused)
+			if (InputTextBox.IsFocused)
 			{
-				if (_inputTextBox.Text == ">_")
-					_inputTextBox.SetText(">");
+				if (InputTextBox.Text == ">_")
+					InputTextBox.SetText(">");
 
 				//Checking if '>' wasn't removed
 				if (text.Length == 0 || text[0] != '>')
 				{
 					text = text.TrimStart();
 					text = text.TrimEnd('>');
-					_inputTextBox.SetText(">" + text);
-					_inputTextBox.SelectionRange = new TextRange(text.Length + 1, text.Length + 1);
+					InputTextBox.SetText(">" + text);
+					InputTextBox.SelectionRange = new TextRange(text.Length + 1, text.Length + 1);
 				}
 			}
 			else
 			{
 				_hintBoxPanel.Visible = false;
 			}
-			if (_scrollBar is null)
+			if (ScrollBarControl is null)
 				return;
 			if (_scrollBarGripUIControl.IsActive)
 			{
@@ -290,7 +288,7 @@ namespace Journal
 		/// </summary>
 		public void Realign()
 		{
-			if (_outputPanel is null)
+			if (OutputPanelControl is null)
 				return;
 			float containerHeight = _currentScreenSize.Y * _consoleHeight;
 			float inputHeight = _readOnly ? 0f : (_baseInputHeight * _uiScale);
@@ -298,30 +296,30 @@ namespace Journal
 			float outputWidth = _currentScreenSize.X - scrollBarWidth;
 			if(_font is object)
 			{
-				_inputTextBox.Font = _font;
+				InputTextBox.Font = _font;
 				_font.Size = _baseFontSize * _uiScale;
 			}
 			_outputHeight = containerHeight - inputHeight;
 
-			if (_readOnly || _inputTextBox is null)
+			if (_readOnly || InputTextBox is null)
 			{
-				_inputTextBox.Visible = false;
+				InputTextBox.Visible = false;
 			}
 			else
 			{
-				_inputTextBox.Visible = true;
-				_inputTextBox.Location = new Vector2(0f, _outputHeight);
-				_inputTextBox.Size = new Vector2(_currentScreenSize.X, inputHeight);
+				InputTextBox.Visible = true;
+				InputTextBox.Location = new Vector2(0f, _outputHeight);
+				InputTextBox.Size = new Vector2(_currentScreenSize.X, inputHeight);
 				_hintBoxPanel.Location = new Vector2(0f, _outputHeight - _hintBoxPanel.Height);
 			}
-			_outputPanel.Location = Vector2.Zero;
-			_outputPanel.Size = new Vector2(outputWidth, _outputHeight);
+			OutputPanelControl.Location = Vector2.Zero;
+			OutputPanelControl.Size = new Vector2(outputWidth, _outputHeight);
 			RealignLogs(true);
 
-			if (_scrollBar is null)
+			if (ScrollBarControl is null)
 				return;
-			_scrollBar.Location = new Vector2(outputWidth, 0f);
-			_scrollBar.Size = new Vector2(scrollBarWidth, _outputHeight);
+			ScrollBarControl.Location = new Vector2(outputWidth, 0f);
+			ScrollBarControl.Size = new Vector2(scrollBarWidth, _outputHeight);
 			RealignScrollBar();
 		}
 
@@ -361,22 +359,22 @@ namespace Journal
 		{
 			if (_scrollBarGripUIControl is null)
 				return;
-			if (_last <= _outputPanel.Height)
+			if (_last <= OutputPanelControl.Height)
 			{
 				_scrollBarGripUIControl.IsActive = false;
 				return;
 			}
 			_scrollBarGripUIControl.IsActive = true;
 			Control control = _scrollBarGripUIControl.Control;
-			control.LocalY = _scrollBar.Height * (ScrollPosition / _last);
-			control.Width = _scrollBar.Width;
-			control.Height = _scrollBar.Height * (_outputPanel.Height / _last);
+			control.LocalY = ScrollBarControl.Height * (ScrollPosition / _last);
+			control.Width = ScrollBarControl.Width;
+			control.Height = ScrollBarControl.Height * (OutputPanelControl.Height / _last);
 		}
 
 		private void RealignLogs(bool widthChange = false)
 		{
 			_last = 0f;
-			float width = _outputPanel.Width;
+			float width = OutputPanelControl.Width;
 			//Double check if width change is worth it
 			if (_logs.Count > 0 && widthChange)
 				widthChange = !Mathf.Approximately(_logs.Peek().Label.Width, width);
@@ -394,16 +392,16 @@ namespace Journal
 		#region Event Handlers
 		private void OnTextChanged()
 		{
-			if (_inputTextBox is null || _hintBoxUIControl is null || _readOnly || !ShowHints)
+			if (InputTextBox is null || _hintBoxUIControl is null || _readOnly || !ShowHints)
 				return;
 			_hintSelectIndex = -1;
-			if (_inputTextBox.Text == ">" || _inputTextBox.Text == ">_" || _inputTextBox.Text.Length < 2)
+			if (InputTextBox.Text == ">" || InputTextBox.Text == ">_" || InputTextBox.Text.Length < 2)
 			{
 				_hintList = new List<Hint>();
 				_hintBoxPanel.Visible = false;
 				return;
 			}
-			string text = _inputTextBox.Text.Remove(0, 1);
+			string text = InputTextBox.Text.Remove(0, 1);
 			IEnumerable<Hint> commands = ConsoleManager.Singleton.Commands
 				.Where(x => x.Name.StartsWith(text))
 				.Select(x => new Hint(x.Name, string.Join(" ", x.Parameters
@@ -431,8 +429,8 @@ namespace Journal
 				label.SetHint(command);
 				label.TextColorHighlighted = Color.Yellow;
 				label.Clicked += x => {
-					_inputTextBox.SetText(">" + x);
-					_inputTextBox.SelectionRange = new TextRange(x.Length + 1, x.Length + 1);
+					InputTextBox.SetText(">" + x);
+					InputTextBox.SelectionRange = new TextRange(x.Length + 1, x.Length + 1);
 				};
 				longestLabel = longestLabel ?? label;
 				if (label.Text.Value.Length > longestLabel.Text.Value.Length)
@@ -452,10 +450,10 @@ namespace Journal
 		{
 			if (!Input.GetKeyDown(KeyboardKeys.Return))
 				return;
-			Debug.Log(_inputTextBox.Text);
-			string[] args = _inputTextBox.Text.Remove(0, 1).Trim().Split(' ');
+			Debug.Log(InputTextBox.Text);
+			string[] args = InputTextBox.Text.Remove(0, 1).Trim().Split(' ');
 			ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
-			_inputTextBox.SetText(">");
+			InputTextBox.SetText(">");
 		}
 
 		private void OnHintChange()
@@ -472,15 +470,15 @@ namespace Journal
 			if(_hintSelectIndex > 0)
 			{
 				string text = ">" + ((HintLabel)_hintBoxPanel.Children[_hintSelectIndex]).HintText;
-				_inputTextBox.SetText(text);
+				InputTextBox.SetText(text);
 				_hintSelectIndex = -1;
-				_inputTextBox.SelectionRange = new TextRange(text.Length, text.Length);
+				InputTextBox.SelectionRange = new TextRange(text.Length, text.Length);
 				return;
 			}
-			Debug.Log(_inputTextBox.Text);
+			Debug.Log(InputTextBox.Text);
 			string[] args = command.Split(' ');
 			ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
-			_inputTextBox.SetText(">");
+			InputTextBox.SetText(">");
 		}
 		#endregion
 	}
