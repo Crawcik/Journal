@@ -25,8 +25,11 @@ namespace Journal
 		public KeyboardKeys OpenCloseButton = KeyboardKeys.BackQuote;
 		[EditorOrder(-970)]
 		public bool DontDestroyOnLoad = false;
-		[EditorOrder(-960)]
-		public bool HeadlessConsole = false;
+		/// TODO: The idea is in FlaxEditor you can have external console appear and you can use it. 
+		/// And in possibly in Game if you run game headless, Journal will take control of the terminal.
+		/// So you can for example control server/lobby, run some headless tests, etc. 
+		[EditorOrder(-960), HideInEditor]
+		private bool HeadlessConsole = false;
 		private List<Command> _commands;
 		#endregion
 
@@ -40,7 +43,7 @@ namespace Journal
 
 		#region Methods
 		/// <inheritdoc/>
-		public override void OnAwake()
+		public override void OnStart()
 		{
 			if (Singleton is object)
 			{
@@ -140,6 +143,8 @@ namespace Journal
 				Debug.LogError(exception);
 			}
 		}
+
+		public static bool IsConsoleExtended => Singleton.Map.Actor.IsActive;
 
 		/// <summary>
 		/// Registers command with specified name and execution method in given command group
