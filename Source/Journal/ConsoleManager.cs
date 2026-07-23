@@ -19,8 +19,6 @@ namespace Journal
 		public UICanvas ConsoleActor;
 		[EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", false)]
 		public Prefab ConsolePrefab;
-		[EditorOrder(-985)]
-		public FontAsset Font;
 		[EditorOrder(-980)]
 		public KeyboardKeys OpenCloseButton = KeyboardKeys.BackQuote;
 		[EditorOrder(-970)]
@@ -34,10 +32,10 @@ namespace Journal
 		#endregion
 
 		#region Properties
-		public static bool IsOpen => Singleton.Map.Actor.IsActive;
+		public static bool IsOpen => Singleton.Map.IsActive();
 		public static ConsoleManager Singleton { get; private set; }
-		public ConsoleMap Map { get; private set; }
-		internal IReadOnlyList<Command> Commands => _commands;
+		public IConsoleMap Map { get; private set; }
+		internal IReadOnlyList<Command> Commands => _commands; // TODO: better method for sharing commands
 		
 		#endregion
 
@@ -51,7 +49,7 @@ namespace Journal
 				Destroy(this);
 				return;
 			}
-			if (DontDestroyOnLoad && this.Scene.Name != "DontDestroyOnLoad")
+			if (DontDestroyOnLoad && !(this.Scene.Name == "DontDestroyOnLoad" || this.Scene.Name == "DDOL"))
 			{
 				var scene = new Scene()
 				{
@@ -67,14 +65,13 @@ namespace Journal
 				Enabled = false;
 				return;
 			}
-			Map.Font = Font;
-			Map.Actor.IsActive = false;
+			Map.Toogle(false);
 			Singleton = this;
 			_commands = new List<Command>();
 			RegisterCommand("help", Help);
 			RegisterCommand<string>("echo", Debug.Log);
 			RegisterCommand("exit", () => Engine.RequestExit(0));
-			RegisterCommand("clear", () => Map.Clear());
+			RegisterCommand("clear", () => Map.ClearLogs());
 			Debug.Logger.LogHandler.SendLog += OnDebugLog;
 #if FLAX_EDITOR
 			FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored += Dispose;
@@ -85,7 +82,7 @@ namespace Journal
 		public override void OnLateUpdate()
 		{
 			if(Input.GetKeyDown(OpenCloseButton))
-				Map.Actor.IsActive = !Map.Actor.IsActive;
+				Map.Toogle(!Map.IsActive());
 		}
 
 		/// <inheritdoc/>
@@ -144,7 +141,7 @@ namespace Journal
 			}
 		}
 
-		public static bool IsConsoleExtended => Singleton.Map.Actor.IsActive;
+		public static bool IsConsoleExtended => Singleton.Map.IsActive();
 
 		/// <summary>
 		/// Registers command with specified name and execution method in given command group
@@ -237,7 +234,7 @@ namespace Journal
 				Debug.LogError("Console actor is not set or cannot be spawned!");
 				return false;
 			}
-			Map = ConsoleActor.GetScript<ConsoleMap>();
+			Map = (IConsoleMap)ConsoleActor.Scripts.FirstOrDefault(x=>x is IConsoleMap);
 			if (Map is null)
 			{
 				Debug.LogError("Cannot find \"ConsoleMap\" script in console actor!");
@@ -262,7 +259,7 @@ namespace Journal
 		private void Dispose()
 		{
 			Debug.Logger.LogHandler.SendLog -= OnDebugLog;
-			Map?.Clear();
+			Map?.ClearLogs();
 #if FLAX_EDITOR
 			FlaxEditor.Editor.Instance.StateMachine.PlayingState.SceneRestored -= Dispose;
 #endif

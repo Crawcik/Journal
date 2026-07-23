@@ -9,7 +9,7 @@ namespace Journal
 	/// <summary>
 	/// ConsoleMap Script.
 	/// </summary>
-	public class ConsoleMap : Script
+	public class BasicConsoleMap : Script, IConsoleMap
 	{
 		#region Constants
 		private const float _baseInputHeight = 10f;
@@ -22,6 +22,7 @@ namespace Journal
 		[EditorOrder(-950)]
 		public bool ShowHints = true;
 		private bool reallign;
+		private FontAsset _fontAsset;
 		private FontReference _font;
 		private Queue<ConsoleLog> _logs;
 		private IEnumerable<Hint> _hintList;
@@ -41,7 +42,7 @@ namespace Journal
 
 		// UI sizes
 		private float _consoleHeight = 0.4f;
-		private int _uiScale = 2;
+		private float _uiScale = 2.0f;
 		private float _outputHeight;
         #endregion
 
@@ -113,17 +114,18 @@ namespace Journal
 		}
 
 		[EditorOrder(-960), ShowInEditor, Range(1, 8)]
-		public int UIScale
+		public float UIScale
 		{
 			get => _uiScale;
 			set
 			{
 				_uiScale = value;
+				_font = new FontReference(_fontAsset, _baseFontSize * _uiScale);
 				Realign();
 			}
 		}
 
-		[EditorOrder(-970), ShowInEditor]
+		[EditorOrder(-950), ShowInEditor]
 		public bool ReadOnly
 		{
 			get => _readOnly;
@@ -141,14 +143,15 @@ namespace Journal
 			set => OutputPanelControl.ViewOffset = new Vector2(0f, -value);
 		}
 		
-		[HideInEditor, NoSerialize]
+		[EditorOrder(-965), ShowInEditor]
 		public FontAsset Font 
 		{
-			get => _font.Font;
+			get => _fontAsset;
 			set
 			{
-				if (_font is null && value is object)
+				if (_fontAsset is null && value is object)
 				{
+					_fontAsset = value;
 					_font = new FontReference(value, _baseFontSize * _uiScale);
 					Realign();
 				}
@@ -323,11 +326,17 @@ namespace Journal
 			RealignScrollBar();
 		}
 
+		/// <inheritdoc/>
+		public void Toogle(bool activate)
+		{
+			Actor.IsActive = activate;
+		}
+
+		/// <inheritdoc/>
+		public bool IsActive() => Actor.IsActive;
 
 		//TODO: Find better way of handling logs (by that I mean not repositioning them after max amount reached)
-		/// <summary>
-		/// Adds log to console
-		/// </summary>
+		/// <inheritdoc/>
 		public void AddLog(ConsoleLog newLog)
 		{
 			newLog.Spawn(OutputPanel, PanelWidth, _last, _font);
@@ -346,10 +355,8 @@ namespace Journal
 			RealignScrollBar();
 		}
 
-		/// <summary>
-		/// Clears console from all logs
-		/// </summary>
-		public void Clear()
+		/// <inheritdoc/>
+		public void ClearLogs()
 		{
 			while (_logs.Count > 0)
 				_logs.Dequeue().Destroy();

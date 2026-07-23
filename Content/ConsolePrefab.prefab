@@ -1,7 +1,7 @@
 {
 	"ID": "51e5a50e4bfb8c4e2d9fb3a0a5353e73",
 	"TypeName": "FlaxEngine.Prefab",
-	"EngineBuild": 6606,
+	"EngineBuild": 6912,
 	"Data": [
 	{
 		"ID": "c38f93ab432eed1c249d81843f708001",
@@ -20,13 +20,14 @@
 }
 	},
 	{
-		"ID": "6c70613c48f3bb0c1583218ebe719dfd",
-		"TypeName": "Journal.ConsoleMap",
+		"ID": "089f803707e90861e2b0b2ca95dcff90",
+		"TypeName": "Journal.BasicConsoleMap",
 		"ParentID": "c38f93ab432eed1c249d81843f708001",
 		"V": {
 	"InputField": "902ce8b549cc79630e308e966d307c2a",
 	"OutputPanel": "e5e19d3e4689a287ed77b1926d4e4af9",
-	"ScrollBar": "c1c7959a438941534c13139fca46d23f"
+	"ScrollBar": "c1c7959a438941534c13139fca46d23f",
+	"Font": "ab96b25a49461d9f4f819484cf5c8213"
 }
 	},
 	{
@@ -36,8 +37,8 @@
 		"Name": "Input",
 		"Transform": {
 			"Translation": {
-				"X": 2.0044491342508147e-19,
-				"Y": 300.0,
+				"X": 0.0,
+				"Y": -20.0,
 				"Z": 0.0
 			}
 		},
@@ -53,8 +54,8 @@
 	"HorizontalAlignment": 0,
 	"Wrapping": 0,
 	"Font": {
-		"Font": null,
-		"Size": 16.0
+		"Font": "ab96b25a49461d9f4f819484cf5c8213",
+		"Size": 10.0
 	},
 	"TextMaterial": null,
 	"TextColor": {
@@ -77,6 +78,7 @@
 	},
 	"EndEditOnClick": true,
 	"IsMultiline": false,
+	"CharactersToAllow": 7,
 	"MaxLength": 300,
 	"IsReadOnly": false,
 	"IsSelectable": true,
@@ -127,8 +129,8 @@
 	},
 	"Offsets": {
 		"Left": 0.0,
-		"Right": 1000.0,
-		"Top": 300.0,
+		"Right": 0.0,
+		"Top": -20.0,
 		"Bottom": 20.0
 	},
 	"Scale": {

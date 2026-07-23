@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("Journal")]
 [assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyConfiguration("Development")]
 [assembly: AssemblyCompany("Crawcik")]
 [assembly: AssemblyProduct("FlaxEngine")]
 [assembly: AssemblyCopyright("MIT License (c) 2021 Crawcik")]
@@ -16,4 +16,5 @@ using System.Runtime.CompilerServices;
 [assembly: Guid("4f876200-6200-4f87-a9d8-473a2f465b78")]
 [assembly: AssemblyVersion("1.1")]
 [assembly: AssemblyFileVersion("1.1")]
+[assembly: AssemblyInformationalVersion("1.1+flexible_mapper+ab6d13a25ca4a16d724c70f7fd008f5d93558144")]
 [assembly: DisableRuntimeMarshalling]
