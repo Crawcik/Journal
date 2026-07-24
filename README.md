@@ -15,6 +15,7 @@
    1. Go to `Journal/Content/` in editor and drag `ConsolePrefab` on to the scene
    2. In ConsoleManager script set `CreateConsoleFromPrefab` unchecked
    3. Drag console actor to `ConsoleActor` field
+4. After starting game press open key (by default "~") and use the console
   
 ## How to add commands to console?
 Like this:
@@ -39,22 +40,20 @@ namespace Game
 	}
 }
 ```
-## Shortcuts
+## Shortcuts for default consoles
 - **Tab**: Selecting hints when editing
 - **Arrow Up**: Get previous commands
 - **Arrow Down**: Get recent commands
 
 ## Installation
-### With Flax Plugin Manager:
-1. Download, unpack & run **Flax Plugin Manager** [[Click here](https://github.com/Crawcik/FlaxPluginManager/releases/latest)]
-2. Select your project & add Journal
-### With Git:
-1. Use this command somewhere in your project folder `git clone https://github.com/Crawcik/Journal.git`<br /> (for example in `<your-flax-project-path>/Plugins/`)
 
-### Normal way:
-1. Download this project .zip or .tar.gz
-2. Unpack it in folder near your project (for example `<your-flax-project-path>/Plugins/Journal/`)
-3. Add in your `.flaxproj` file path to plugin, like in this example:
+### After Flax 1.7
+- Go to Tools->Plugins in Editor. In a window press "Clone Project".
+
+### Before Flax 1.7
+- A) Download this project .zip or .tar.gz and unpack it in folder near your project (for example `<your-flax-project-path>/Plugins/Journal/`) 
+- B) Clone the repo. Command: `git clone https://github.com/Crawcik/Journal.git`
+- Add in your `.flaxproj` file path to plugin, like in this example:
 ```json
 {
 	"GameTarget": "GameTarget",
@@ -69,7 +68,15 @@ namespace Game
 	],
 }
 ```
-4. Go to `<your-flax-project-path>/Source/Game/Game.Build.cs` and add "**Journal**" module, here is example: *if you don't want to use commands this is optional*
+
+### With Flax Plugin Manager:
+- Download, unpack & run **Flax Plugin Manager** [[Click here](https://github.com/Crawcik/FlaxPluginManager/releases/latest)]
+- Select your project & add Journal
+
+## Setup (referencing)
+
+### Simple
+Go to `<your-flax-project-path>/Source/Game/Game.Build.cs` and add "**Journal**" module, here is example: *if you don't want to use commands this is optional*
 ```cs
 public override void Setup(BuildOptions options)
 {
@@ -78,6 +85,23 @@ public override void Setup(BuildOptions options)
 	options.PrivateDependencies.Add("Journal"); // Adds reference to Journal types
 }
 ```
-5. If something doesn't work: check logs, try deleting `Cache` folder or generate project files manually
-  
+If something doesn't work: check logs, try deleting `Cache` folder or generate project files manually
+
 Also here is official tutorial for installing plugins: https://docs.flaxengine.com/manual/scripting/plugins/plugin-project.html
+
+### Adaptive (prefered for other plugins)
+This method is better if you want to integrate "**Journal**" in your plugin, but you want to have it optional (no need to have Journal installed).
+
+Copy `<journal-project-path>/Content/JournalExtension.cs` to desired module source code folder. You can now use functions in the `Journal` class ***without*** referencing Journal in `.flaxproj`
+```cs
+public override void OnStart()
+{
+    Journal.RegisterCommand<int>("is_odd", IsOdd);
+}
+
+public static void IsOdd(int number)
+{
+    Debug.Log("This number is" + number%2==0 ? "odd" : "not odd");
+}
+```
+The commands will appear, if **Journal** is referenced if *any other* project, like top project! If not, dont worry. Your code will still compile without it being present!
