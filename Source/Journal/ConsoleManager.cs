@@ -29,6 +29,7 @@ namespace Journal
 		[EditorOrder(-960), HideInEditor]
 		private bool HeadlessConsole = false;
 		private List<Command> _commands;
+		private Scene _consoleScene;
 		#endregion
 
 		#region Properties
@@ -49,6 +50,7 @@ namespace Journal
 				Destroy(this);
 				return;
 			}
+			_consoleScene = this.Scene;
 			if (DontDestroyOnLoad && !(this.Scene.Name == "DontDestroyOnLoad" || this.Scene.Name == "DDOL"))
 			{
 				var scene = new Scene()
@@ -57,8 +59,11 @@ namespace Journal
 					StaticFlags = StaticFlags.FullyStatic
 				};
 				var bytes = Level.SaveSceneToBytes(scene, prettyJson: false);
-				scene = Level.LoadSceneFromBytes(bytes);
-				this.Actor.Parent = scene;
+				_consoleScene = Level.LoadSceneFromBytes(bytes);
+				if (this.Actor != this.Scene)
+					this.Actor.Parent = _consoleScene;
+				else
+					this.Actor = _consoleScene;
 			}
 			if (!CheckSettings())
 			{
@@ -140,8 +145,6 @@ namespace Journal
 				Debug.LogError(exception);
 			}
 		}
-
-		public static bool IsConsoleExtended => Singleton.Map.IsActive();
 
 		/// <summary>
 		/// Registers command with specified name and execution method in given command group
@@ -227,7 +230,7 @@ namespace Journal
 					Debug.LogError("Console prefab is not set!");
 					return false;
 				}
-				ConsoleActor = (UICanvas)PrefabManager.SpawnPrefab(ConsolePrefab, Scene);
+				ConsoleActor = (UICanvas)PrefabManager.SpawnPrefab(ConsolePrefab, _consoleScene);
 			}
 			if (ConsoleActor is null)
 			{
