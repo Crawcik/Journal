@@ -29,8 +29,8 @@ namespace Journal
 						break;
 					_commandHistory.Add(text);
 					_commandHistoryIndex = _commandHistory.Count;
-					OnCommand?.Invoke(text);
 					Defocus();
+					OnCommand?.Invoke(text);
 					return true;
 				case KeyboardKeys.Tab:
 					OnHintChange?.Invoke();
