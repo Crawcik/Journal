@@ -44,6 +44,8 @@ namespace Journal
 		private float _consoleHeight = 0.4f;
 		private float _uiScale = 2.0f;
 		private float _outputHeight;
+		private string _prevTextFrame;
+		private string _textFrame;
 		#endregion
 
 		#region Properties
@@ -102,7 +104,7 @@ namespace Journal
 		[EditorOrder(-975)]
 		public byte MaxConsoleLogCount = 200;
 
-		[EditorOrder(-970), ShowInEditor, Range(0, 100), Space(5f)]
+        [EditorOrder(-970), ShowInEditor, Range(0, 100), Space(5f)]
 		public int ConsoleHeightPercent 
 		{
 			get => (int)(_consoleHeight * 100f);
@@ -177,6 +179,7 @@ namespace Journal
 			_scrollBar = ScrollBar?.Control;
 			*/
 			reallign = false;
+			_prevTextFrame = ">";
 			if (OutputPanelControl is null)
 			{
 				Debug.LogError("Fields in \"Command map\" are empty!");
@@ -221,6 +224,13 @@ namespace Journal
 			Realign();
 		}
 
+        public override void OnUpdate()
+        {
+			// This is used for checking if on close keyboard key made an addition to input box when closing it.
+			// Closing from ConsoleManager is on LateUpdate so we save textframe in Update.
+            _prevTextFrame = _textFrame;
+        }
+
 		/// <inheritdoc/>
 		public override void OnLateUpdate()
 		{
@@ -228,8 +238,8 @@ namespace Journal
 #if FLAX_EDITOR
 			screenSize /= FlaxEditor.Editor.Instance.Options.Options.Interface.InterfaceScale;
 #endif
-			string text = InputTextBox.Text.Trim();
 			float scrollDelta = Input.MouseScrollDelta;
+			_textFrame = InputTextBox.Text;
 			_lastAnimationTime += Time.DeltaTime;
 			if (OutputPanelControl.IsMouseOver && scrollDelta != 0f)
 			{
@@ -247,24 +257,27 @@ namespace Journal
 				_lastAnimationTime -= 1f;
 
 				//Console waiting animation
-				if (text == ">" || text == string.Empty)
+				if (_textFrame == ">" || _textFrame == string.Empty)
 					InputTextBox.Text = ">_";
-				else if (text == ">_")
+				else if (_textFrame == ">_")
 					InputTextBox.Text = ">";
 			}
 			if (InputTextBox.IsFocused)
 			{
-				if (InputTextBox.Text == ">_")
+				if (_textFrame == ">_" || _textFrame.Length == 0)
 					InputTextBox.SetText(">");
-
-				//Checking if '>' wasn't removed
-				if (text.Length == 0 || text[0] != '>')
+				//Checking if '>' wasn't misplaced
+				if (!_textFrame.StartsWith('>'))
 				{
-					text = text.TrimStart();
-					text = text.TrimEnd('>');
-					InputTextBox.SetText(">" + text);
-					InputTextBox.SelectionRange = new TextRange(text.Length + 1, text.Length + 1);
+					_textFrame = _textFrame.TrimStart();
+					_textFrame = _textFrame.TrimEnd('>');
+					InputTextBox.SetText(">" + _textFrame);
+					InputTextBox.SelectionRange = new TextRange(_textFrame.Length + 1, _textFrame.Length + 1);
 				}
+				_textFrame = InputTextBox.Text;
+				var select = InputTextBox.SelectionRange;
+				if (select.StartIndex < -1 || select.EndIndex < 1) // Fix for bugged select
+					InputTextBox.SelectionRange = new TextRange(_textFrame.Length + 1, _textFrame.Length + 1);
 			}
 			else
 			{
@@ -330,6 +343,13 @@ namespace Journal
 		public void Toogle(bool activate)
 		{
 			Actor.IsActive = activate;
+			if (activate)
+			{
+				InputTextBox.SetText(_prevTextFrame); // Reverting text, toogle key made it to input box. Rought solution but better than nothing.
+				InputTextBox.Focus();
+				return;
+			}
+			InputTextBox.Defocus();
 		}
 
 		/// <inheritdoc/>
@@ -489,16 +509,19 @@ namespace Journal
 		{
 			int i;
 			for (i = 1; i < command.Length && command[i] != ' '; i++) ;
-			string[] parameters;
-			try
+			string[] parameters = new string[0];
+			if (i < command.Length)
 			{
-				parameters = ConsoleTools.NormalizeArgs(command.Remove(0, i + 1)).ToArray();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogWarning(ex.Message);
-				InputTextBox.Focus(); // Back to focus for the commandbox
-				return;
+				try
+				{
+					parameters =  ConsoleTools.NormalizeArgs(command.Remove(0, i + 1)).ToArray();
+					command = command.Remove(i);
+				}
+				catch (Exception ex)
+				{
+					Debug.LogWarning(ex.Message);
+					return;
+				}
 			}
 			ConsoleManager.ExecuteCommand(command.Remove(i), parameters);
 			InputTextBox.SetText(">");

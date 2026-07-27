@@ -25,11 +25,12 @@ namespace Journal
 					if (Text.StartsWith(">"))
 						text = Text.Remove(0, 1);
 					text = text.Trim();
-					if(text.Length == 0)
+					if(text.Length == 0) {
+						Defocus();
 						break;
+					}
 					_commandHistory.Add(text);
 					_commandHistoryIndex = _commandHistory.Count;
-					Defocus();
 					OnCommand?.Invoke(text);
 					return true;
 				case KeyboardKeys.Tab:

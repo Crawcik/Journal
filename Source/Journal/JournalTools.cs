@@ -11,6 +11,7 @@ namespace Journal
 	/// </summary>
 	public static class ConsoleTools
 	{
+
 		public static IEnumerable<string> NormalizeArgs(string input)
 		{	
 			var argBuild = new StringBuilder(64);
@@ -42,6 +43,7 @@ namespace Journal
 						else if (textStart)
 						{
 							yield return argBuild.ToString();
+							argBuild.Clear();
 							textStart = false;
 						}
 						continue;
@@ -82,11 +84,6 @@ namespace Journal
 					return Convert.ToChar(Convert.ToUInt16(new string(xa), 16));
 			}
 			return '\0';
-		}
-
-		private static void X(string arg, ref StringBuilder builder)
-		{
-			
 		}
 	}
 }
