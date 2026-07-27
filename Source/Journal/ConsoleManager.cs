@@ -265,15 +265,15 @@ namespace Journal
 #endif
 		}
 
-		private void OnDebugLog(LogType level, string msg, FlaxEngine.Object obj, string stackTrace) => Map.AddLog(new ConsoleLog(msg, level));
+		private void OnDebugLog(LogType level, string msg, FlaxEngine.Object obj, string stackTrace) => Map.AddLog(new ConsoleLog(msg, level, stackTrace));
 		#endregion
 
-		internal class Command 
+		public class Command 
 		{
 			public readonly string Name;
-			public readonly MethodInfo MethodInfo;
 			public readonly ParameterInfo[] Parameters;
-			public readonly object Target;
+			internal readonly MethodInfo MethodInfo;
+			internal readonly object Target;
 
 			public Command(string name, MethodInfo methodInfo, object target)
 			{

@@ -1,71 +1,22 @@
 ﻿using FlaxEngine;
-using FlaxEngine.GUI;
 
 namespace Journal
 {
 	/// <summary>
-	/// Console log entity.
+	/// Console log
 	/// </summary>
-	public class ConsoleLog
+	public struct ConsoleLog
 	{
-		#region Fields
-		public readonly string Text;
-		public readonly LogType Level;
-		private UIControl _uiElement;
-		#endregion
+		public string Text;
+		public LogType Level;
+		// Can be null or empty!
+		public string StackTrace;
 
-		/// <summary>
-		/// UI label reference.
-		/// </summary>
-		public Label Label { get; private set; }
-
-		public ConsoleLog(string text, LogType level)
+		public ConsoleLog(string text, LogType level, string stackTrace = null)
 		{
 			Text = text;
 			Level = level;
+			StackTrace = stackTrace;
 		}
-
-		#region Methods
-		internal void Spawn(UIControl parent, float width, float y, FontReference font)
-		{
-			if (_uiElement is object || parent is null)
-				return;
-			Label = new Label(0f, 0f, width, 0f)
-			{
-				Font = font,
-				Text = new LocalizedString(Text),
-				TextColor = GetColor(),
-				HorizontalAlignment = TextAlignment.Near,
-				VerticalAlignment = TextAlignment.Center,
-				AutoHeight = true,
-				Margin = new Margin(3f),
-				AutoFitText = false,
-				Pivot = new Vector2(0f, 0f),
-				BackgroundColor = new Color(0, 0, 0, 40)
-			};
-			_uiElement = Object.New<UIControl>();
-			_uiElement.Control = Label;
-			_uiElement.Parent = parent;
-			_uiElement.LocalPosition = new Vector3(0f, y, 0f);
-		}
-
-		internal void Destroy()
-		{
-			if (_uiElement is null)
-				return;
-			Object.Destroy(_uiElement);
-		}
-
-		private Color GetColor()
-		{
-			switch(Level) 
-			{
-				case LogType.Warning:   return Color.Yellow;
-				case LogType.Error:     return Color.Red;
-				case LogType.Fatal:     return Color.DarkRed;
-				default:                return Color.White;
-			}
-		}
-		#endregion
 	}
 }

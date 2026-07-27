@@ -1,6 +1,5 @@
 ﻿using FlaxEngine;
 using FlaxEngine.GUI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +23,7 @@ namespace Journal
 		private bool reallign;
 		private FontAsset _fontAsset;
 		private FontReference _font;
-		private Queue<ConsoleLog> _logs;
+		private Queue<LogEntry> _logs;
 		private IEnumerable<Hint> _hintList;
 		private Vector2 _currentScreenSize;
 		private float _last = 0f;
@@ -219,7 +218,7 @@ namespace Journal
 				control.LocalLocation = Vector2.Zero;
 				RealignScrollBar();
 			}
-			_logs = new Queue<ConsoleLog>(MaxConsoleLogCount);
+			_logs = new Queue<LogEntry>(MaxConsoleLogCount);
 			_currentScreenSize = Screen.Size;
 			Realign();
 		}
@@ -357,14 +356,15 @@ namespace Journal
 
 		//TODO: Find better way of handling logs (by that I mean not repositioning them after max amount reached)
 		/// <inheritdoc/>
-		public void AddLog(ConsoleLog newLog)
+		public void AddLog(ConsoleLog log)
 		{
+			var newLog = new LogEntry(log.Text, log.Level);
 			newLog.Spawn(OutputPanel, PanelWidth, _last, _font);
 			_logs.Enqueue(newLog);
 			_last += newLog.Label.Height + 2f;
 			if (_logs.Count > MaxConsoleLogCount)
 			{
-				ConsoleLog oldLog = _logs.Dequeue();
+				LogEntry oldLog = _logs.Dequeue();
 				oldLog.Destroy();
 				RealignLogs();
 			}
@@ -405,7 +405,7 @@ namespace Journal
 			//Double check if width change is worth it
 			if (_logs.Count > 0 && widthChange)
 				widthChange = !Mathf.Approximately(_logs.Peek().Label.Width, width);
-			foreach (ConsoleLog log in _logs)
+			foreach (LogEntry log in _logs)
 			{
 				log.Label.LocalY = _last;
 				log.Label.Font.Size = _baseFontSize * _uiScale;
@@ -517,7 +517,7 @@ namespace Journal
 					parameters =  ConsoleTools.NormalizeArgs(command.Remove(0, i + 1)).ToArray();
 					command = command.Remove(i);
 				}
-				catch (Exception ex)
+				catch (System.Exception ex)
 				{
 					Debug.LogWarning(ex.Message);
 					return;
@@ -527,17 +527,69 @@ namespace Journal
 			InputTextBox.SetText(">");
 		}
 		#endregion
-	}
 
-	public readonly struct Hint
-	{
-		public readonly string Name;
-		public readonly string Parameters;
-
-		public Hint(string name, string parameters) : this()
+		#region Structures
+		/// <summary>
+		/// Log entry handle class
+		/// </summary>
+		public class LogEntry
 		{
-			this.Name = name;
-			this.Parameters = parameters;
+			public readonly string Text;
+			public readonly LogType Level;
+			private UIControl _uiElement;
+
+			/// <summary>
+			/// UI label reference.
+			/// </summary>
+			public Label Label { get; private set; }
+
+			public LogEntry(string text, LogType level)
+			{
+				Text = text;
+				Level = level;
+			}
+
+			internal void Spawn(UIControl parent, float width, float y, FontReference font)
+			{
+				if (_uiElement is object || parent is null)
+					return;
+				Label = new Label(0f, 0f, width, 0f)
+				{
+					Font = font,
+					Text = new LocalizedString(Text),
+					TextColor = GetColor(),
+					HorizontalAlignment = TextAlignment.Near,
+					VerticalAlignment = TextAlignment.Center,
+					AutoHeight = true,
+					Margin = new Margin(3f),
+					AutoFitText = false,
+					Pivot = new Vector2(0f, 0f),
+					BackgroundColor = new Color(0, 0, 0, 40)
+				};
+				_uiElement = Object.New<UIControl>();
+				_uiElement.Control = Label;
+				_uiElement.Parent = parent;
+				_uiElement.LocalPosition = new Vector3(0f, y, 0f);
+			}
+
+			internal void Destroy()
+			{
+				if (_uiElement is null)
+					return;
+				Object.Destroy(_uiElement);
+			}
+
+			private Color GetColor()
+			{
+				switch(Level) 
+				{
+					case LogType.Warning:   return Color.Yellow;
+					case LogType.Error:     return Color.Red;
+					case LogType.Fatal:     return Color.DarkRed;
+					default:                return Color.White;
+				}
+			}
 		}
+		#endregion
 	}
 }

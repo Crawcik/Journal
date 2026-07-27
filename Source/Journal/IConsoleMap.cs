@@ -8,7 +8,7 @@ namespace Journal
 		/// <summary>
 		/// Adds log to console
 		/// </summary>    {
-		void AddLog(ConsoleLog newLog);
+		void AddLog(ConsoleLog log);
 		/// <summary>
 		/// Requests to toogle the console
 		/// </summary>    
