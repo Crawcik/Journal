@@ -9,7 +9,7 @@ namespace Journal
 	/// </summary>
 	internal class Journal : GamePlugin
     {
-        private readonly Version _version = new Version(1, 1);
+        private readonly Version _version = new Version(1, 2);
 
         /// <inheritdoc />
         #if FLAX_1_4_OR_NEWER || FLAX_1_4 || FLAX_1_5
