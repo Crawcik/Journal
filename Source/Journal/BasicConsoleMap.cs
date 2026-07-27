@@ -35,7 +35,7 @@ namespace Journal
 		// UI
 		private UIControl _inputUIControl;
 		private UIControl _outputUIControl;
-        private UIControl _scrollBarUIControl;
+		private UIControl _scrollBarUIControl;
 		private UIControl _scrollBarGripUIControl;
 		private UIControl _hintBoxUIControl;
 		private VerticalPanel _hintBoxPanel;
@@ -44,9 +44,9 @@ namespace Journal
 		private float _consoleHeight = 0.4f;
 		private float _uiScale = 2.0f;
 		private float _outputHeight;
-        #endregion
+		#endregion
 
-        #region Properties
+		#region Properties
 		[EditorOrder(-1000)]
 		public UIControl InputField 
 		{ 
@@ -102,7 +102,7 @@ namespace Journal
 		[EditorOrder(-975)]
 		public byte MaxConsoleLogCount = 200;
 
-        [EditorOrder(-970), ShowInEditor, Range(0, 100), Space(5f)]
+		[EditorOrder(-970), ShowInEditor, Range(0, 100), Space(5f)]
 		public int ConsoleHeightPercent 
 		{
 			get => (int)(_consoleHeight * 100f);
@@ -453,16 +453,6 @@ namespace Journal
 			_hintBoxPanel.Visible = true;
 		}
 
-		private void OnEditEnd()
-		{
-			if (!Input.GetKeyDown(KeyboardKeys.Return))
-				return;
-			Debug.Log(InputTextBox.Text);
-			string[] args = InputTextBox.Text.Remove(0, 1).Trim().Split(' ');
-			ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
-			InputTextBox.SetText(">");
-		}
-
 		private void OnHintChange()
 		{
 			_hintSelectIndex++;
@@ -472,9 +462,18 @@ namespace Journal
 			_hintBoxPanel.Children[(_hintSelectIndex == 0 ? _hintList.Count() : _hintSelectIndex) - 1].OnMouseLeave();
 		}
 
+		private void OnEditEnd()
+		{
+			if (!Input.GetKeyDown(KeyboardKeys.Return))
+				return;
+			Debug.Log(InputTextBox.Text);
+			ExecuteCommand(InputTextBox.Text.Remove(0, 1));
+		}
+
+
 		private void OnCommand(string command)
 		{
-			if(_hintSelectIndex > 0)
+			if (_hintSelectIndex > 0)
 			{
 				string text = ">" + ((HintLabel)_hintBoxPanel.Children[_hintSelectIndex]).HintText;
 				InputTextBox.SetText(text);
@@ -483,8 +482,25 @@ namespace Journal
 				return;
 			}
 			Debug.Log(InputTextBox.Text);
-			string[] args = command.Split(' ');
-			ConsoleManager.ExecuteCommand(args[0], args.Skip(1).ToArray());
+			ExecuteCommand(command);
+		}
+
+		private void ExecuteCommand(string command)
+		{
+			int i;
+			for (i = 1; i < command.Length && command[i] != ' '; i++) ;
+			string[] parameters;
+			try
+			{
+				parameters = ConsoleTools.NormalizeArgs(command.Remove(0, i + 1)).ToArray();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogWarning(ex.Message);
+				InputTextBox.Focus(); // Back to focus for the commandbox
+				return;
+			}
+			ConsoleManager.ExecuteCommand(command.Remove(i), parameters);
 			InputTextBox.SetText(">");
 		}
 		#endregion
