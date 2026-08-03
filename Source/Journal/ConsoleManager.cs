@@ -16,16 +16,41 @@ namespace Journal
 	public class ConsoleManager : Script
 	{
 		#region Fields
+		/// <summary>
+		/// If true, <see cref="ConsoleManager.ConsolePrefab"/> will be use to create console actor, 
+		/// otherwise manager will use actor and map script from <see cref="ConsoleManager.ConsoleActor"/> field
+		/// <remarks>After script start its change wont affect anything.</remarks>
+		/// </summary>
 		[EditorOrder(-1000)]
 		public bool CreateConsoleFromPrefab = true;
+
+		/// <summary>
+		/// Reference to the console actor, from which script will be referenced in <see cref="ConsoleManager.Map"/>.
+		/// Actor needs to contain single script that also has an derives <see cref="IConsoleMap"/>, otherwise it won't work.
+		/// <remarks>After script start its change wont affect anything.</remarks>
+		/// </summary>
 		[EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", true)]
 		public UICanvas ConsoleActor;
+
+		/// <summary>
+		/// Prefab asset that will be spawned and actor used in <see cref="ConsoleManager.ConsoleActor"/>
+		/// Only used if <see cref="ConsoleManager.CreateConsoleFromPrefab"/> field is set to true on script start.
+		/// <remarks>After script start its change wont affect anything.</remarks>
+		/// </summary>
 		[EditorOrder(-990), VisibleIf("CreateConsoleFromPrefab", false)]
 		public Prefab ConsolePrefab;
+
+		/// <summary>Indicates which button is used to toggle console. Can be changed at any point</summary>
 		[EditorOrder(-980)]
 		public KeyboardKeys OpenCloseButton = KeyboardKeys.BackQuote;
+		
+		/// <summary>
+		/// If true, it will create or try to move related stuff to the separate scene.
+		/// This way unloading scene and destructive stuff happening in there, won't affect console.
+		/// </summary>
 		[EditorOrder(-970)]
 		public bool DontDestroyOnLoad = false;
+
 		/// TODO: The idea is in FlaxEditor you can have external console appear and you can use it. 
 		/// And in possibly in Game if you run game headless, Journal will take control of the terminal.
 		/// So you can for example control server/lobby, run some headless tests, etc. 
@@ -36,9 +61,20 @@ namespace Journal
 		#endregion
 
 		#region Properties
+		/// <summary>Checks if main console is opened/active.</summary>
 		public static bool IsOpen => Singleton.Map.IsActive();
+
+		/// <summary>
+		/// Single instance reference of the ConsoleManager script.
+		/// If two or more instances are active in game, will be discarded, and will not interfere.
+		/// </summary>
 		public static ConsoleManager Singleton { get; private set; }
+
+		/// <summary>
+		/// Reference to the currently used console handler or its mapping instance.
+		/// </summary>
 		public IConsoleMap Map { get; private set; }
+
 		internal IReadOnlyList<Command> Commands => _commands; // TODO: better method for sharing commands
 		
 		#endregion
@@ -280,13 +316,19 @@ namespace Journal
 		private void OnDebugLog(LogType level, string msg, FlaxEngine.Object obj, string stackTrace) => Map.AddLog(new ConsoleLog(msg, level, stackTrace));
 		#endregion
 
+		/// <summary>Holds command info.</summary>
 		public class Command 
 		{
+			/// <summary>Name of the command.</summary>
 			public readonly string Name;
+
+			/// <summary>Array of parameter info.</summary>
 			public readonly ParameterInfo[] Parameters;
+
 			internal readonly MethodInfo MethodInfo;
 			internal readonly object Target;
-
+			
+			/// <summary>Constructor.</summary>
 			public Command(string name, MethodInfo methodInfo, object target)
 			{
 				this.Name = name;

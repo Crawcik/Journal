@@ -7,11 +7,16 @@ namespace Journal
 	/// </summary>
 	public struct ConsoleLog
 	{
+		/// <summary>Displayed log.</summary>
 		public string Text;
+
+		/// <summary>Log level.</summary>
 		public LogType Level;
-		// Can be null or empty!
+
+		/// <summary>Stack trace of the log.</summary>
 		public string StackTrace;
 
+		/// <summary>Constructor.</summary>
 		public ConsoleLog(string text, LogType level, string stackTrace = null)
 		{
 			Text = text;

@@ -21,6 +21,7 @@ namespace Journal
 		#endregion
 	
 		#region Fields
+		/// <summary>If true shows hint box</summary>
 		[EditorOrder(-950)]
 		public bool ShowHints = true;
 		private bool reallign;
@@ -51,6 +52,7 @@ namespace Journal
 		#endregion
 
 		#region Properties
+		/// <summary>Input field box.</summary>
 		[EditorOrder(-1000)]
 		public UIControl InputField 
 		{ 
@@ -68,6 +70,7 @@ namespace Journal
 			}
 		}
 
+		/// <summary>Output panel UIControl.</summary>
 		[EditorOrder(-990)]
 		public UIControl OutputPanel
 		{ 
@@ -86,6 +89,7 @@ namespace Journal
 			}
 		}
 
+		/// <summary>Scroll bar UIControl.</summary>
 		[EditorOrder(-980)]
 		public UIControl ScrollBar
 		{ 
@@ -103,9 +107,11 @@ namespace Journal
 			}
 		}
 
-		[EditorOrder(-975)]
-		public byte MaxConsoleLogCount = 200;
+		/// <summary>Gives how many entries can console panel hold. Dont set it to too high number or game might start lagging.</summary>
+		[EditorOrder(-975), Range(0, 500)]
+		public int MaxConsoleLogCount = 200;
 
+		/// <summary>Console height percentage, from 0 to 100%.</summary>
         [EditorOrder(-970), ShowInEditor, Range(0, 100), Space(5f)]
 		public int ConsoleHeightPercent 
 		{
@@ -117,6 +123,7 @@ namespace Journal
 			}
 		}
 
+		/// <summary>Determines how much console and its elements will be scaled (like font size)</summary>
 		[EditorOrder(-960), ShowInEditor, Range(1, 8)]
 		public float UIScale
 		{
@@ -129,6 +136,7 @@ namespace Journal
 			}
 		}
 
+		/// <summary>Indicates is it read only. Input box is hidden or disabled.</summary>
 		[EditorOrder(-950), ShowInEditor]
 		public bool ReadOnly
 		{
@@ -140,6 +148,7 @@ namespace Journal
 			}
 		}
 
+		/// <summary>Output panels current view position.</summary>
 		[HideInEditor, NoSerialize]
 		public float ScrollPosition 
 		{
@@ -147,6 +156,7 @@ namespace Journal
 			set => OutputPanelControl.ViewOffset = new Vector2(0f, -value);
 		}
 		
+		/// <summary>Font that is used in input box and entries.</summary>
 		[EditorOrder(-965), ShowInEditor]
 		public FontAsset Font 
 		{
@@ -162,9 +172,9 @@ namespace Journal
 
 			}
 		}
-		public float PanelWidth => OutputPanelControl.Width;
 
-		public int FontSize { get; private set; }
+		/// <summary>Returns width of the output panel.</summary>
+		public float PanelWidth => OutputPanelControl.Width;
 
 		private Spacer ScrollBarControl => (Spacer)_scrollBarUIControl.Control;
 		private TextBox InputTextBox => (TextBox)_inputUIControl.Control;
@@ -226,6 +236,7 @@ namespace Journal
 			Realign();
 		}
 
+		/// <inheritdoc/>
         public override void OnUpdate()
         {
 			// This is used for checking if on close keyboard key made an addition to input box when closing it.
@@ -534,8 +545,12 @@ namespace Journal
 		/// </summary>
 		public class LogEntry
 		{
+			/// <summary>Displayed log.</summary>
 			public readonly string Text;
+
+			/// <summary>Log level.</summary>
 			public readonly LogType Level;
+
 			private UIControl _uiElement;
 
 			/// <summary>
@@ -543,6 +558,7 @@ namespace Journal
 			/// </summary>
 			public Label Label { get; private set; }
 
+			/// <summary>Constructor.</summary>
 			public LogEntry(string text, LogType level)
 			{
 				Text = text;
