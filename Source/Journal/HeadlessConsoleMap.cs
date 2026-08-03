@@ -34,19 +34,20 @@ namespace Journal
 		// Terminal thread-only fields
 		private readonly StringBuilder _command;
 		private int _commandCursorPos;
-
+		private float _blinkTime;
+		private bool _blinkCurrentlyDisplayed;
 		#endregion
 
 		#region Properties
-
 		#endregion
 
 		/// <summary>Constructor.</summary>
 		public HeadlessConsoleMap()
 		{
-			_terminalThread = new Thread(HandleTerminal);
+			_terminalThread = new Thread(TerminalSetup);
 			_command = new StringBuilder(70);
 			_bag = new ConcurrentQueue<ConsoleLog>();
+			_blinkTime = 0.0f;
 		}
 
 		#region Methods
@@ -96,6 +97,39 @@ namespace Journal
 				Debug.LogWarning("Journal cannot work. Programs text output or input is not going through terminal/console. Disabling.");
 				return;
 			}
+			if (activate && !_active)
+			{
+				_terminalThread.Start();
+				Scripting.Update += OnUpdate;
+			}
+			else
+			{
+				Scripting.Update -= OnUpdate;
+				if (_terminalThread.IsAlive)
+					_terminalThread.Join();
+			}
+
+			_active = activate;
+			
+		}
+
+		private void OnUpdate()
+		{
+			_blinkTime += Time.DeltaTime;
+			if (_blinkTime > 2.0f)
+				_blinkTime -= 2.0f;
+
+			// Would use JobSystem but I want to preserve compability with Flax 1.0
+			if (!_terminalThread.IsAlive && _active)
+			{
+				_terminalThread = new Thread(HandleTerminal);
+				_terminalThread.Start();
+			}
+		}
+
+		// Run only once to test the console capabilities
+		private void TerminalSetup()
+		{
 			try
 			{
 				Console.Clear();
@@ -132,19 +166,7 @@ namespace Journal
 			{
 				_terminalColorSupport = false;
 			}
-			if (activate)
-			{
-				Scripting.Update += OnUpdate;
-			}
-			else
-			{
-				Scripting.Update -= OnUpdate;
-				if (_terminalThread.IsAlive)
-					_terminalThread.Join();
-			}
-
-			_active = activate;
-			
+			// This is temporary to check in different terminals
 			string[] data = new string[] {
 				"CursorSet: " + _terminalCursorSet,
 				"CursorGet: " + _terminalCursorGet,
@@ -152,16 +174,8 @@ namespace Journal
 				"SizeGet: " + _terminalSizeGet
 			};
 			Console.WriteLine(string.Join(',', data));
-		}
-
-		private void OnUpdate()
-		{
-			// Would use JobSystem but I want to preserve compability with Flax 1.0
-			if (!_terminalThread.IsAlive && _active)
-			{
-				_terminalThread = new Thread(HandleTerminal);
-				_terminalThread.Start();
-			}
+			
+			InputRestore();
 		}
 
 		// Here we handle terminal, this should not be on any of Flax's main threads to not throttle them.
@@ -200,6 +214,7 @@ namespace Journal
 						try
 						{
 							ConsoleTools.SeparateCommandAndArgs(_command.ToString(), out var command, out var args);
+							BlinkRefresh(true);
 							Console.WriteLine(); // Because command text is written already, we just jump to new line
 							_command.Clear();
 							InputRestore(); // We restore input to nothing
@@ -228,12 +243,21 @@ namespace Journal
 						break;
 				};
 			}
+			
+			if (_blinkCurrentlyDisplayed == _blinkTime > 1.0f)
+			{
+				_blinkCurrentlyDisplayed = !_blinkCurrentlyDisplayed;
+				BlinkRefresh();
+			}
 		}
 
 		// We restore input to the line in the way it was previously displayed
 		private void InputRestore()
 		{
 			_commandCursorPos = _command.Length;
+			if (_blinkTime > 1.0f)
+				_blinkCurrentlyDisplayed = false;
+			WriteBlinkCursor();
 			Console.Write(_command.ToString());
 		}
 
@@ -243,6 +267,39 @@ namespace Journal
 			Console.Write('\r');
 			_commandCursorPos = 0;
 		}
+
+		private void BlinkRefresh(bool forceShow = false)
+		{
+			if (_terminalCursorSet && _terminalCursorGet)
+			{
+				ValueTuple<int,int> curPos = Console.GetCursorPosition();
+				Console.SetCursorPosition(0, curPos.Item2);
+				WriteBlinkCursor(forceShow);
+				Console.SetCursorPosition(curPos.Item1, curPos.Item2);
+				return;
+			}
+			// This method might flicker in some circumstances
+			InputStash();
+			InputRestore();
+		}
+
+		// Only run when cursor at beggining
+		private void WriteBlinkCursor(bool forceShow = false)
+		{
+			if (_terminalColorSupport)
+			{
+				Console.ForegroundColor = ConsoleColor.Cyan;
+				Console.Write(BlinkString(forceShow));
+				Console.ForegroundColor = ConsoleColor.White;
+			}
+			else Console.Write(BlinkString(forceShow));
+		}
+
+		// If cursor pos can be set arrow blink will occur (good to have it to see if main flax thread freezed)
+		private string BlinkString(bool forceShow = false) =>
+			(!forceShow &&_terminalCursorSet && _terminalCursorGet && _blinkTime > 1.0f)
+				? "  "
+				: "> ";
 
 		// This can be called thread-safe, not overlaping way, but in case of FATAL log we better print it asap!
 		private void WriteLogTerminal(ConsoleLog log)
