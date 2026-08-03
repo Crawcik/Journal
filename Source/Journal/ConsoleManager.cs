@@ -10,6 +10,9 @@ namespace Journal
 	/// <summary>
 	/// ConsoleManager Script.
 	/// </summary>
+#if FLAX_1_2_OR_NEWER || FLAX_1_2 || FLAX_1_3 || FLAX_1_4 || FLAX_1_5
+	[Category("Journal")]
+#endif
 	public class ConsoleManager : Script
 	{
 		#region Fields
