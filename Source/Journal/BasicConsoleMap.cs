@@ -487,11 +487,20 @@ namespace Journal
 			if (!Input.GetKeyDown(KeyboardKeys.Return))
 				return;
 			Debug.Log(InputTextBox.Text);
-			ExecuteCommand(InputTextBox.Text.Remove(0, 1));
+			try
+			{
+				ConsoleTools.SeparateCommandAndArgs(InputTextBox.Text, out var command, out var args, offset: 1);
+				ConsoleManager.ExecuteCommand(command, args);
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogWarning(ex.Message);
+			}
+			InputTextBox.SetText(">");
 		}
 
 
-		private void OnCommand(string command)
+		private void OnCommand(string commandText)
 		{
 			if (_hintSelectIndex > 0)
 			{
@@ -502,30 +511,18 @@ namespace Journal
 				return;
 			}
 			Debug.Log(InputTextBox.Text);
-			ExecuteCommand(command);
-		}
-
-		private void ExecuteCommand(string command)
-		{
-			int i;
-			for (i = 1; i < command.Length && command[i] != ' '; i++) ;
-			string[] parameters = new string[0];
-			if (i < command.Length)
+			try
 			{
-				try
-				{
-					parameters =  ConsoleTools.NormalizeArgs(command.Remove(0, i + 1)).ToArray();
-					command = command.Remove(i);
-				}
-				catch (System.Exception ex)
-				{
-					Debug.LogWarning(ex.Message);
-					return;
-				}
+				ConsoleTools.SeparateCommandAndArgs(commandText, out var command, out var args, offset: 1);
+				ConsoleManager.ExecuteCommand(command, args);
 			}
-			ConsoleManager.ExecuteCommand(command.Remove(i), parameters);
+			catch (System.Exception ex)
+			{
+				Debug.LogWarning(ex.Message);
+			}
 			InputTextBox.SetText(">");
 		}
+
 		#endregion
 
 		#region Structures

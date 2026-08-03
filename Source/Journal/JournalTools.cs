@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using FlaxEngine;
 
@@ -12,6 +13,11 @@ namespace Journal
 	public static class ConsoleTools
 	{
 
+		/// <summary>
+		/// Parses arguments to allow more special types of args like, args with spaces (in brackets), special characters ('\n','\u01FA','\t'), etc.
+		/// </summary>
+		/// <param name="input">Input string of arguments to be separated.</param>
+		/// <returns>Enumerable list of arguments separated correctly.</returns>
 		public static IEnumerable<string> NormalizeArgs(string input)
 		{	
 			var argBuild = new StringBuilder(64);
@@ -66,6 +72,32 @@ namespace Journal
 				yield return argBuild.ToString();
 		}
 
+		/// <summary>
+		/// Separates command and args correctly from each other and parses arguments 
+		/// to allow more special types of args like, args with spaces (in brackets), special characters ('\n','\u01FA','\t'), etc.
+		/// </summary>
+		/// <param name="input">Input string with command arguments to be separated.</param>
+		/// <param name="command">Output string giving command.</param>
+		/// <param name="args">Output array of correctly separated and formated arguments.</param>
+		/// <param name="offset">Skipped charaters at the begining of input.</param>
+		public static void SeparateCommandAndArgs(string input, out string command, out string[] args, int offset = 0)
+		{
+#if !BUILD_RELEASE
+			Debug.Assert(offset >= 0, "Offset cannot be smaller than 0");
+#endif
+			int idx;
+			for (idx = offset; idx < input.Length && input[idx] != ' '; idx++);
+			if (idx < input.Length)
+			{
+				args =  NormalizeArgs(input.Remove(0, idx + 1)).ToArray();
+				command = input.Remove(idx).Remove(0, offset);
+				return;
+			}
+			command = input.Remove(0, offset);
+			args = Array.Empty<string>();
+		}
+
+		// Parsing charaters after '\' to their correct special character (unicode char, new line, etc.)
 		private static char SpChr(ref string str, ref int index) 
 		{
 			switch(str[++index])
