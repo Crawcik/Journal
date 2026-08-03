@@ -70,7 +70,6 @@ namespace Journal
 				Enabled = false;
 				return;
 			}
-			Map.Toogle(false);
 			Singleton = this;
 			_commands = new List<Command>();
 			RegisterCommand("help", Help);
@@ -125,6 +124,7 @@ namespace Journal
 					return false;
 				try
 				{
+					// TODO: Advance converting (Vectors, arrays)
 					for (int i = 0; i < args.Length; i++)
 						paramArray[i] = Convert.ChangeType(args[i], x.Parameters[i].ParameterType);
 				}
@@ -219,10 +219,15 @@ namespace Journal
 
 		private bool CheckSettings()
 		{
-			if(Engine.IsHeadless)
-				HeadlessConsole = true;
-			if(HeadlessConsole)
-				return true;
+#if PLATFORM_LINUX || PLATFORM_WINDOWS || PLATFORM_MACOS
+			if (Engine.IsHeadless)
+			{
+				Map = new HeadlessConsoleMap();
+				ConsoleActor = null;
+				Map.Toogle(true);
+				return Map.IsActive();
+			}
+#endif
 			if (CreateConsoleFromPrefab)
 			{
 				if (ConsolePrefab is null)
@@ -243,6 +248,7 @@ namespace Journal
 				Debug.LogError("Cannot find \"ConsoleMap\" script in console actor!");
 				return false;
 			}
+			Map.Toogle(false); // Just so it will be closed after starting
 			return true;
 		}
 
