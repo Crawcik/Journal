@@ -1,13 +1,8 @@
-#if PLATFORM_LINUX || PLATFORM_WINDOWS || PLATFORM_MACOS
-
+#if PLATFORM_LINUX || PLATFORM_WINDOWS || PLATFORM_MACOSs
 using System;
 using System.Collections.Concurrent;
-using System.Reflection;
-using System.Reflection.Metadata;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using FlaxEditor;
 using FlaxEngine;
 
 namespace Journal
@@ -36,6 +31,7 @@ namespace Journal
 		private int _commandCursorPos;
 		private float _blinkTime;
 		private bool _blinkCurrentlyDisplayed;
+		private bool _refreshInput;
 		#endregion
 
 		#region Properties
@@ -141,18 +137,17 @@ namespace Journal
 			}
 			catch (Exception)
 			{
+				// if set doesnt work then get wont help much so we disable both of them
 				_terminalCursorSet = false;
 				_terminalCursorGet = false;
 			}
 			try
 			{
 				_terminalSizeGet = Console.WindowHeight > 0;
-				
 			}
 			catch (Exception)
 			{
-				_terminalCursorSet = false;
-				_terminalCursorGet = false;
+				_terminalSizeGet = false;
 			}
 			try
 			{
@@ -202,8 +197,22 @@ namespace Journal
 			{
 				var keyInfo = Console.ReadKey(true);
 				var chr = keyInfo.KeyChar;
+				int newPos;
+				char[] buffer;
+
 				switch (keyInfo.Key)
 				{
+					case ConsoleKey.RightArrow:
+					case ConsoleKey.LeftArrow:
+						if (!_terminalCursorSet || !_terminalCursorGet)
+							break;
+						_commandCursorPos += keyInfo.Key == ConsoleKey.LeftArrow ? -1 : 1;
+						newPos = Math.Clamp(_commandCursorPos, 0,  _command.Length);
+						if (_commandCursorPos != newPos)
+							_commandCursorPos = newPos; // Out of range
+						else 
+							Console.SetCursorPosition(newPos + 2, Console.GetCursorPosition().Item2);
+						break;
 					// TODO: selecting historic command
 					case ConsoleKey.UpArrow: break;
 					case ConsoleKey.DownArrow: break;
@@ -213,6 +222,10 @@ namespace Journal
 						// TODO: confirming use of selected historic command
 						try
 						{
+							// This was we skip "Debug.Logger.LogHandler.SendLog" event firing and dont create feedback loop.
+							// It goes to C++ part, so file logger mostly.
+							Debug.Logger.LogHandler.LogWrite(LogType.Info, "> " + _command.ToString());
+
 							ConsoleTools.SeparateCommandAndArgs(_command.ToString(), out var command, out var args);
 							BlinkRefresh(true);
 							Console.WriteLine(); // Because command text is written already, we just jump to new line
@@ -222,7 +235,8 @@ namespace Journal
 						}
 						catch (Exception ex)
 						{
-							// Error while parsing command, we stash it (reset lines) and write error, then restore
+							// Error while parsing command, we stash it (reset input line) and write error, then restore
+							_refreshInput = false;
 							InputStash();
 							WriteLogTerminal(new ConsoleLog(ex.Message, LogType.Warning));
 							InputRestore();
@@ -231,14 +245,41 @@ namespace Journal
 					case ConsoleKey.Backspace:
 						if (_command.Length == 0)
 							break;
-						_command.Length -= 1;
+						if (_terminalCursorSet && _commandCursorPos < _command.Length)
+						{
+							_commandCursorPos--;
+							newPos = _command.Length - _commandCursorPos;
+							buffer = new char[newPos + 3];
+							buffer[0] = '\b';
+							buffer[1] = ' ';
+							buffer[2] = '\b';
+							buffer[newPos + 2] = ' '; // So the last char will not be left hanging in console
+							_command.Remove(_commandCursorPos, 1);
+							_command.CopyTo(_commandCursorPos, buffer, 3, newPos - 1);
+							Console.Write(buffer);
+							Console.SetCursorPosition(_commandCursorPos + 2, Console.GetCursorPosition().Item2);
+							break;
+						}
 						Console.Write("\b \b");
+						_command.Length -= 1;
+						_commandCursorPos--;
 						break;
 					default:
 						if (char.IsControl(chr))
 							break;
-						_command.Append(chr);
-						Console.Write(chr);
+						if (_commandCursorPos == _command.Length)
+						{
+							// Simple char append
+							_command.Append(chr);
+							Console.Write(chr);
+						}
+						else 
+						{
+							_command.Insert(_commandCursorPos, chr);
+							_refreshInput = true; 
+							// We do an whole input refresh instead of moving & rewriting in console text,
+							// because if someone pastes long string then we do rewrite for each char.
+						}
 						_commandCursorPos++;
 						break;
 				};
@@ -249,23 +290,42 @@ namespace Journal
 				_blinkCurrentlyDisplayed = !_blinkCurrentlyDisplayed;
 				BlinkRefresh();
 			}
+
+			// If true then input should be refreshed at the end so it displays properly
+			if (_refreshInput)
+			{
+				_refreshInput = false;
+				InputStash();
+				InputRestore();
+			}
 		}
 
 		// We restore input to the line in the way it was previously displayed
 		private void InputRestore()
 		{
-			_commandCursorPos = _command.Length;
 			if (_blinkTime > 1.0f)
 				_blinkCurrentlyDisplayed = false;
 			WriteBlinkCursor();
 			Console.Write(_command.ToString());
+			if (_terminalCursorSet && _terminalCursorGet && _command.Length != _commandCursorPos)
+			{
+				_commandCursorPos = Math.Min(_command.Length, _commandCursorPos); // Just so it is correct
+				Console.SetCursorPosition(_commandCursorPos + 2, Console.GetCursorPosition().Item2);
+			}
+			else _commandCursorPos = _command.Length;
 		}
 
 		// Here we try to get rid of input line, so the incoming log wont be missplaced
 		private void InputStash()
 		{
+			if (_terminalCursorSet && _terminalCursorGet)
+			{
+				// Incoming log or input replacement might be shorter than input so we fix that by overwriting its content with spaces.
+				ValueTuple<int,int> curPos = Console.GetCursorPosition();
+				Console.SetCursorPosition(0, curPos.Item2);
+				Console.Write(new string(' ', _command.Length + 2));
+			}
 			Console.Write('\r');
-			_commandCursorPos = 0;
 		}
 
 		private void BlinkRefresh(bool forceShow = false)
@@ -279,6 +339,7 @@ namespace Journal
 				return;
 			}
 			// This method might flicker in some circumstances
+			_refreshInput = false;
 			InputStash();
 			InputRestore();
 		}
