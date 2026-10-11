@@ -1,6 +1,7 @@
 #if PLATFORM_LINUX || PLATFORM_WINDOWS || PLATFORM_MACOSs
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using FlaxEngine;
@@ -17,6 +18,8 @@ namespace Journal
 
 		// Shared fields
 		private readonly ConcurrentQueue<ConsoleLog> _bag;
+		private readonly List<string> _commandHistory = new List<string>();
+		private int _commandHistoryIndex = -1;
 		private bool _terminalColorSupport  = false;
 		private bool _terminalCursorSet  = false;
 		private bool _terminalCursorGet  = false;
@@ -32,18 +35,20 @@ namespace Journal
 		private float _blinkTime;
 		private bool _blinkCurrentlyDisplayed;
 		private bool _refreshInput;
-		#endregion
+        private volatile bool _clearRequest;
+        #endregion
 
-		#region Properties
-		#endregion
+        #region Properties
+        #endregion
 
-		/// <summary>Constructor.</summary>
-		public HeadlessConsoleMap()
+        /// <summary>Constructor.</summary>
+        public HeadlessConsoleMap()
 		{
 			_terminalThread = new Thread(TerminalSetup);
 			_command = new StringBuilder(70);
 			_bag = new ConcurrentQueue<ConsoleLog>();
 			_blinkTime = 0.0f;
+			_commandHistoryIndex = -1;
 		}
 
 		#region Methods
@@ -63,7 +68,8 @@ namespace Journal
 		/// <inheritdoc/>
 		public void ClearLogs()
 		{
-			throw new System.NotImplementedException();
+			if (!_clearRequest)
+				_clearRequest = true;
 		}
 
 		/// <inheritdoc/>
@@ -176,6 +182,13 @@ namespace Journal
 		// Here we handle terminal, this should not be on any of Flax's main threads to not throttle them.
 		private void HandleTerminal()
 		{
+			// Clear Request
+			if (_clearRequest)
+			{
+				_clearRequest = false;
+				Console.Clear();
+			}
+
 			// Input saving
 			var wasEmpty = _bag.IsEmpty;
 			if (!wasEmpty) // If there are outputs then we run 
@@ -207,26 +220,55 @@ namespace Journal
 						if (!_terminalCursorSet || !_terminalCursorGet)
 							break;
 						_commandCursorPos += keyInfo.Key == ConsoleKey.LeftArrow ? -1 : 1;
-						newPos = Math.Clamp(_commandCursorPos, 0,  _command.Length);
+						var length = _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
+						newPos = Math.Clamp(_commandCursorPos, 0,  length);
 						if (_commandCursorPos != newPos)
 							_commandCursorPos = newPos; // Out of range
 						else 
 							Console.SetCursorPosition(newPos + 2, Console.GetCursorPosition().Item2);
 						break;
-					// TODO: selecting historic command
-					case ConsoleKey.UpArrow: break;
-					case ConsoleKey.DownArrow: break;
-					// TODO: hint select systemx
+					case ConsoleKey.UpArrow: 
+						if (_commandHistoryIndex == 0) // Oldest command reached
+							break;
+						InputStash();
+						_commandHistoryIndex = _commandHistoryIndex < 0
+							? _commandHistory.Count - 1
+							: _commandHistoryIndex - 1;
+						InputRestore();
+						break;
+					case ConsoleKey.DownArrow:
+						if (_commandHistoryIndex < 0) // Current command reached
+							break;
+						InputStash();	
+						_commandHistoryIndex =_commandHistoryIndex < _commandHistory.Count - 1
+							? _commandHistoryIndex + 1
+							: -1;
+						InputRestore();
+						break;
 					case ConsoleKey.Tab: break;
 					case ConsoleKey.Enter:
-						// TODO: confirming use of selected historic command
+						if (_commandHistoryIndex >= 0) // Confirming use of selected historic command
+						{
+							_command.Clear();
+							_command.Append(_commandHistory[_commandHistoryIndex]);
+							_commandHistoryIndex = -1;
+							InputStash();
+							InputRestore();
+							break;
+						}
+
+						// If is new command
+						var commandString = _command.ToString().TrimEnd();
+						if (_commandHistory.Count == 0 || _commandHistory[_commandHistory.Count-1] != commandString)
+							_commandHistory.Add(commandString);
+
 						try
 						{
 							// This was we skip "Debug.Logger.LogHandler.SendLog" event firing and dont create feedback loop.
 							// It goes to C++ part, so file logger mostly.
-							Debug.Logger.LogHandler.LogWrite(LogType.Info, "> " + _command.ToString());
+							Debug.Logger.LogHandler.LogWrite(LogType.Info, "> " + commandString);
 
-							ConsoleTools.SeparateCommandAndArgs(_command.ToString(), out var command, out var args);
+							ConsoleTools.SeparateCommandAndArgs(commandString, out var command, out var args);
 							BlinkRefresh(true);
 							Console.WriteLine(); // Because command text is written already, we just jump to new line
 							_command.Clear();
@@ -267,11 +309,20 @@ namespace Journal
 					default:
 						if (char.IsControl(chr))
 							break;
+						if (_commandHistoryIndex >= 0) // Confirming use of selected historic command
+						{
+							_command.Clear();
+							_command.Append(_commandHistory[_commandHistoryIndex]);
+							_commandHistoryIndex = -1;
+							_refreshInput = true; 
+						}
+
 						if (_commandCursorPos == _command.Length)
 						{
 							// Simple char append
 							_command.Append(chr);
-							Console.Write(chr);
+							if (!_refreshInput)
+								Console.Write(chr);
 						}
 						else 
 						{
@@ -306,13 +357,14 @@ namespace Journal
 			if (_blinkTime > 1.0f)
 				_blinkCurrentlyDisplayed = false;
 			WriteBlinkCursor();
-			Console.Write(_command.ToString());
+			Console.Write(_commandHistoryIndex < 0 ? _command.ToString() : _commandHistory[_commandHistoryIndex]);
 			if (_terminalCursorSet && _terminalCursorGet && _command.Length != _commandCursorPos)
 			{
-				_commandCursorPos = Math.Min(_command.Length, _commandCursorPos); // Just so it is correct
+				var length = _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
+				_commandCursorPos = Math.Min(length, _commandCursorPos); // Just so it is correct
 				Console.SetCursorPosition(_commandCursorPos + 2, Console.GetCursorPosition().Item2);
 			}
-			else _commandCursorPos = _command.Length;
+			else _commandCursorPos = _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
 		}
 
 		// Here we try to get rid of input line, so the incoming log wont be missplaced
@@ -323,7 +375,7 @@ namespace Journal
 				// Incoming log or input replacement might be shorter than input so we fix that by overwriting its content with spaces.
 				ValueTuple<int,int> curPos = Console.GetCursorPosition();
 				Console.SetCursorPosition(0, curPos.Item2);
-				Console.Write(new string(' ', _command.Length + 2));
+				Console.Write(new string(' ',  (_commandHistoryIndex < 0 ?_command.Length : _commandHistory[_commandHistoryIndex].Length) + 2));
 			}
 			Console.Write('\r');
 		}
@@ -351,7 +403,7 @@ namespace Journal
 			{
 				Console.ForegroundColor = ConsoleColor.Cyan;
 				Console.Write(BlinkString(forceShow));
-				Console.ForegroundColor = ConsoleColor.White;
+				Console.ForegroundColor = _commandHistoryIndex < 0 ? ConsoleColor.White : ConsoleColor.Gray;
 			}
 			else Console.Write(BlinkString(forceShow));
 		}
