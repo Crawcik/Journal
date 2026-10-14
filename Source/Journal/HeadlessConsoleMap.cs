@@ -14,31 +14,38 @@ namespace Journal
 	/// </summary>
 	public class HeadlessConsoleMap : IConsoleMap
 	{
-		#region Fields
+        private const string BlinkPrompt = "> ";
 
-		// Shared fields
-		private readonly ConcurrentQueue<ConsoleLog> _bag;
-		private readonly List<string> _commandHistory = new List<string>();
-		private int _commandHistoryIndex = -1;
+        #region Fields
+        // Shared fields
+        private readonly ConcurrentQueue<ConsoleLog> _bag;
+		private readonly List<string> _commandHistory;
 		private bool _terminalColorSupport  = false;
 		private bool _terminalCursorSet  = false;
 		private bool _terminalCursorGet  = false;
 		private bool _terminalSizeGet  = false;
+		private volatile bool _clearRequest;
 
 		// Flax threads fields
 		private Thread _terminalThread;
 		private bool _active = false;
 
 		// Terminal thread-only fields
+		private readonly string _blinkPromptEmpty;
+		private readonly int _blinkPromptLen;
 		private readonly StringBuilder _command;
 		private int _commandCursorPos;
 		private float _blinkTime;
 		private bool _blinkCurrentlyDisplayed;
 		private bool _refreshInput;
-        private volatile bool _clearRequest;
+		private int _commandHistoryIndex = -1;
+		private int _prevInputLength;
         #endregion
 
         #region Properties
+		private string CurrentInput => _commandHistoryIndex < 0 ? _command.ToString() : _commandHistory[_commandHistoryIndex];
+		private int CurrentInputLenght => _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
+		private bool IsInputHistoric => _commandHistoryIndex >= 0;
         #endregion
 
         /// <summary>Constructor.</summary>
@@ -47,8 +54,12 @@ namespace Journal
 			_terminalThread = new Thread(TerminalSetup);
 			_command = new StringBuilder(70);
 			_bag = new ConcurrentQueue<ConsoleLog>();
+			_commandHistory = new List<string>();
+			_blinkPromptLen = BlinkPrompt.Length;
+			_blinkPromptEmpty = new string(' ', BlinkPrompt.Length);
 			_blinkTime = 0.0f;
 			_commandHistoryIndex = -1;
+			_prevInputLength = 0;
 		}
 
 		#region Methods
@@ -215,29 +226,31 @@ namespace Journal
 
 				switch (keyInfo.Key)
 				{
+					// Moving in the input line
 					case ConsoleKey.RightArrow:
 					case ConsoleKey.LeftArrow:
 						if (!_terminalCursorSet || !_terminalCursorGet)
 							break;
 						_commandCursorPos += keyInfo.Key == ConsoleKey.LeftArrow ? -1 : 1;
-						var length = _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
-						newPos = Math.Clamp(_commandCursorPos, 0,  length);
+						newPos = Math.Clamp(_commandCursorPos, 0,  CurrentInputLenght);
 						if (_commandCursorPos != newPos)
 							_commandCursorPos = newPos; // Out of range
 						else 
-							Console.SetCursorPosition(newPos + 2, Console.GetCursorPosition().Item2);
+							Console.SetCursorPosition(newPos + _blinkPromptLen, Console.GetCursorPosition().Item2);
 						break;
+					
+					// Moving through historic commands
 					case ConsoleKey.UpArrow: 
 						if (_commandHistoryIndex == 0) // Oldest command reached
 							break;
 						InputStash();
-						_commandHistoryIndex = _commandHistoryIndex < 0
+						_commandHistoryIndex = !IsInputHistoric
 							? _commandHistory.Count - 1
 							: _commandHistoryIndex - 1;
 						InputRestore();
 						break;
 					case ConsoleKey.DownArrow:
-						if (_commandHistoryIndex < 0) // Current command reached
+						if (!IsInputHistoric) // Current command reached
 							break;
 						InputStash();	
 						_commandHistoryIndex =_commandHistoryIndex < _commandHistory.Count - 1
@@ -245,16 +258,15 @@ namespace Journal
 							: -1;
 						InputRestore();
 						break;
-					case ConsoleKey.Tab: break;
+
+
+					case ConsoleKey.Tab: break; // TODO: Hints
 					case ConsoleKey.Enter:
-						if (_commandHistoryIndex >= 0) // Confirming use of selected historic command
+						if (IsInputHistoric) // Confirming use of selected historic command
 						{
 							_command.Clear();
 							_command.Append(_commandHistory[_commandHistoryIndex]);
 							_commandHistoryIndex = -1;
-							InputStash();
-							InputRestore();
-							break;
 						}
 
 						// If is new command
@@ -278,7 +290,6 @@ namespace Journal
 						catch (Exception ex)
 						{
 							// Error while parsing command, we stash it (reset input line) and write error, then restore
-							_refreshInput = false;
 							InputStash();
 							WriteLogTerminal(new ConsoleLog(ex.Message, LogType.Warning));
 							InputRestore();
@@ -299,7 +310,7 @@ namespace Journal
 							_command.Remove(_commandCursorPos, 1);
 							_command.CopyTo(_commandCursorPos, buffer, 3, newPos - 1);
 							Console.Write(buffer);
-							Console.SetCursorPosition(_commandCursorPos + 2, Console.GetCursorPosition().Item2);
+							Console.SetCursorPosition(_commandCursorPos + _blinkPromptLen, Console.GetCursorPosition().Item2);
 							break;
 						}
 						Console.Write("\b \b");
@@ -309,7 +320,7 @@ namespace Journal
 					default:
 						if (char.IsControl(chr))
 							break;
-						if (_commandHistoryIndex >= 0) // Confirming use of selected historic command
+						if (IsInputHistoric) // Confirming use of selected historic command
 						{
 							_command.Clear();
 							_command.Append(_commandHistory[_commandHistoryIndex]);
@@ -345,7 +356,6 @@ namespace Journal
 			// If true then input should be refreshed at the end so it displays properly
 			if (_refreshInput)
 			{
-				_refreshInput = false;
 				InputStash();
 				InputRestore();
 			}
@@ -357,14 +367,14 @@ namespace Journal
 			if (_blinkTime > 1.0f)
 				_blinkCurrentlyDisplayed = false;
 			WriteBlinkCursor();
-			Console.Write(_commandHistoryIndex < 0 ? _command.ToString() : _commandHistory[_commandHistoryIndex]);
-			if (_terminalCursorSet && _terminalCursorGet && _command.Length != _commandCursorPos)
+			Console.Write(CurrentInput);
+			if (_terminalCursorSet && _terminalCursorGet && _command.Length != _commandCursorPos && !IsInputHistoric)
 			{
-				var length = _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
-				_commandCursorPos = Math.Min(length, _commandCursorPos); // Just so it is correct
-				Console.SetCursorPosition(_commandCursorPos + 2, Console.GetCursorPosition().Item2);
+				_commandCursorPos = Math.Min(CurrentInputLenght, _commandCursorPos); // Just so it is correct
+				Console.SetCursorPosition(_commandCursorPos + _blinkPromptLen, Console.GetCursorPosition().Item2);
 			}
-			else _commandCursorPos = _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
+			else _commandCursorPos = CurrentInputLenght;
+			_refreshInput = false;
 		}
 
 		// Here we try to get rid of input line, so the incoming log wont be missplaced
@@ -375,7 +385,7 @@ namespace Journal
 				// Incoming log or input replacement might be shorter than input so we fix that by overwriting its content with spaces.
 				ValueTuple<int,int> curPos = Console.GetCursorPosition();
 				Console.SetCursorPosition(0, curPos.Item2);
-				Console.Write(new string(' ',  (_commandHistoryIndex < 0 ?_command.Length : _commandHistory[_commandHistoryIndex].Length) + 2));
+				Console.Write(new string(' ',  CurrentInputLenght + _blinkPromptLen));
 			}
 			Console.Write('\r');
 		}
@@ -391,7 +401,6 @@ namespace Journal
 				return;
 			}
 			// This method might flicker in some circumstances
-			_refreshInput = false;
 			InputStash();
 			InputRestore();
 		}
@@ -403,7 +412,7 @@ namespace Journal
 			{
 				Console.ForegroundColor = ConsoleColor.Cyan;
 				Console.Write(BlinkString(forceShow));
-				Console.ForegroundColor = _commandHistoryIndex < 0 ? ConsoleColor.White : ConsoleColor.Gray;
+				Console.ForegroundColor = _commandHistoryIndex < 0 ? ConsoleColor.White : ConsoleColor.DarkBlue;
 			}
 			else Console.Write(BlinkString(forceShow));
 		}
@@ -411,8 +420,8 @@ namespace Journal
 		// If cursor pos can be set arrow blink will occur (good to have it to see if main flax thread freezed)
 		private string BlinkString(bool forceShow = false) =>
 			(!forceShow &&_terminalCursorSet && _terminalCursorGet && _blinkTime > 1.0f)
-				? "  "
-				: "> ";
+				? _blinkPromptEmpty
+				: BlinkPrompt;
 
 		// This can be called thread-safe, not overlaping way, but in case of FATAL log we better print it asap!
 		private void WriteLogTerminal(ConsoleLog log)
