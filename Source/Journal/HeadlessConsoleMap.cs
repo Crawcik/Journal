@@ -39,13 +39,18 @@ namespace Journal
 		private bool _blinkCurrentlyDisplayed;
 		private bool _refreshInput;
 		private int _commandHistoryIndex = -1;
-		private int _prevInputLength;
         #endregion
 
         #region Properties
+		// Returns current input text
 		private string CurrentInput => _commandHistoryIndex < 0 ? _command.ToString() : _commandHistory[_commandHistoryIndex];
+		// Returns current input text length
 		private int CurrentInputLenght => _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
+		// Returns true if current input text is displaying previous commands state,
+		// otherwise false if its currently in input command edit mode
 		private bool IsInputHistoric => _commandHistoryIndex >= 0;
+		// Returns true if terminal supports both setting and fetching its cursor position
+		private bool IsCursorGetSet => _terminalCursorGet && _terminalCursorSet;
         #endregion
 
         /// <summary>Constructor.</summary>
@@ -59,7 +64,6 @@ namespace Journal
 			_blinkPromptEmpty = new string(' ', BlinkPrompt.Length);
 			_blinkTime = 0.0f;
 			_commandHistoryIndex = -1;
-			_prevInputLength = 0;
 		}
 
 		#region Methods
@@ -140,9 +144,12 @@ namespace Journal
 			}
 		}
 
-		// Run only once to test the console capabilities
+		// Runing only once to test the console capabilities
 		private void TerminalSetup()
 		{
+			// TODO: Split Windows, Linux and Mac terminal capability check, with Linux and Mac having "terminfo" read mechanic.
+			//       If I will have more time maybe ditch System.Console and go for directly outputing strings to terminal, preparing
+			//       whole str through "HandleTerminal" and sending it at the end for perfect console handling on unix-like tty's
 			try
 			{
 				Console.Clear();
@@ -178,15 +185,6 @@ namespace Journal
 			{
 				_terminalColorSupport = false;
 			}
-			// This is temporary to check in different terminals
-			string[] data = new string[] {
-				"CursorSet: " + _terminalCursorSet,
-				"CursorGet: " + _terminalCursorGet,
-				"ColorSupport: " + _terminalColorSupport,
-				"SizeGet: " + _terminalSizeGet
-			};
-			Console.WriteLine(string.Join(',', data));
-			
 			InputRestore();
 		}
 
@@ -198,6 +196,7 @@ namespace Journal
 			{
 				_clearRequest = false;
 				Console.Clear();
+				BlinkRefresh(true);
 			}
 
 			// Input saving
@@ -229,7 +228,7 @@ namespace Journal
 					// Moving in the input line
 					case ConsoleKey.RightArrow:
 					case ConsoleKey.LeftArrow:
-						if (!_terminalCursorSet || !_terminalCursorGet)
+						if (!IsCursorGetSet)
 							break;
 						_commandCursorPos += keyInfo.Key == ConsoleKey.LeftArrow ? -1 : 1;
 						newPos = Math.Clamp(_commandCursorPos, 0,  CurrentInputLenght);
@@ -258,8 +257,6 @@ namespace Journal
 							: -1;
 						InputRestore();
 						break;
-
-
 					case ConsoleKey.Tab: break; // TODO: Hints
 					case ConsoleKey.Enter:
 						if (IsInputHistoric) // Confirming use of selected historic command
@@ -296,9 +293,11 @@ namespace Journal
 						}
 						break;
 					case ConsoleKey.Backspace:
+						// Here backspace is handled, trying here cleanly deleting char,
+						// TODO: Implementing "Delete" ConsoleKey.
 						if (_command.Length == 0)
 							break;
-						if (_terminalCursorSet && _commandCursorPos < _command.Length)
+						if (IsCursorGetSet && _commandCursorPos < _command.Length)
 						{
 							_commandCursorPos--;
 							newPos = _command.Length - _commandCursorPos;
@@ -368,7 +367,7 @@ namespace Journal
 				_blinkCurrentlyDisplayed = false;
 			WriteBlinkCursor();
 			Console.Write(CurrentInput);
-			if (_terminalCursorSet && _terminalCursorGet && _command.Length != _commandCursorPos && !IsInputHistoric)
+			if (IsCursorGetSet && _command.Length != _commandCursorPos && !IsInputHistoric)
 			{
 				_commandCursorPos = Math.Min(CurrentInputLenght, _commandCursorPos); // Just so it is correct
 				Console.SetCursorPosition(_commandCursorPos + _blinkPromptLen, Console.GetCursorPosition().Item2);
@@ -380,7 +379,7 @@ namespace Journal
 		// Here we try to get rid of input line, so the incoming log wont be missplaced
 		private void InputStash()
 		{
-			if (_terminalCursorSet && _terminalCursorGet)
+			if (IsCursorGetSet)
 			{
 				// Incoming log or input replacement might be shorter than input so we fix that by overwriting its content with spaces.
 				ValueTuple<int,int> curPos = Console.GetCursorPosition();
@@ -392,7 +391,7 @@ namespace Journal
 
 		private void BlinkRefresh(bool forceShow = false)
 		{
-			if (_terminalCursorSet && _terminalCursorGet)
+			if (IsCursorGetSet)
 			{
 				ValueTuple<int,int> curPos = Console.GetCursorPosition();
 				Console.SetCursorPosition(0, curPos.Item2);
@@ -419,7 +418,7 @@ namespace Journal
 
 		// If cursor pos can be set arrow blink will occur (good to have it to see if main flax thread freezed)
 		private string BlinkString(bool forceShow = false) =>
-			(!forceShow &&_terminalCursorSet && _terminalCursorGet && _blinkTime > 1.0f)
+			(!forceShow && IsCursorGetSet && _blinkTime > 1.0f)
 				? _blinkPromptEmpty
 				: BlinkPrompt;
 
