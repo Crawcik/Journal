@@ -1,13 +1,9 @@
-#if PLATFORM_LINUX || PLATFORM_WINDOWS || PLATFORM_MACOS
-
+#if PLATFORM_LINUX || PLATFORM_WINDOWS || PLATFORM_MACOSs
 using System;
 using System.Collections.Concurrent;
-using System.Reflection;
-using System.Reflection.Metadata;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using FlaxEditor;
 using FlaxEngine;
 
 namespace Journal
@@ -18,35 +14,56 @@ namespace Journal
 	/// </summary>
 	public class HeadlessConsoleMap : IConsoleMap
 	{
-		#region Fields
+        private const string BlinkPrompt = "> ";
 
-		// Shared fields
-		private readonly ConcurrentQueue<ConsoleLog> _bag;
+        #region Fields
+        // Shared fields
+        private readonly ConcurrentQueue<ConsoleLog> _bag;
+		private readonly List<string> _commandHistory;
 		private bool _terminalColorSupport  = false;
 		private bool _terminalCursorSet  = false;
 		private bool _terminalCursorGet  = false;
 		private bool _terminalSizeGet  = false;
+		private volatile bool _clearRequest;
 
 		// Flax threads fields
 		private Thread _terminalThread;
 		private bool _active = false;
 
 		// Terminal thread-only fields
+		private readonly string _blinkPromptEmpty;
+		private readonly int _blinkPromptLen;
 		private readonly StringBuilder _command;
 		private int _commandCursorPos;
+		private float _blinkTime;
+		private bool _blinkCurrentlyDisplayed;
+		private bool _refreshInput;
+		private int _commandHistoryIndex = -1;
+        #endregion
 
-		#endregion
+        #region Properties
+		// Returns current input text
+		private string CurrentInput => _commandHistoryIndex < 0 ? _command.ToString() : _commandHistory[_commandHistoryIndex];
+		// Returns current input text length
+		private int CurrentInputLenght => _commandHistoryIndex < 0 ? _command.Length : _commandHistory[_commandHistoryIndex].Length;
+		// Returns true if current input text is displaying previous commands state,
+		// otherwise false if its currently in input command edit mode
+		private bool IsInputHistoric => _commandHistoryIndex >= 0;
+		// Returns true if terminal supports both setting and fetching its cursor position
+		private bool IsCursorGetSet => _terminalCursorGet && _terminalCursorSet;
+        #endregion
 
-		#region Properties
-
-		#endregion
-
-		/// <summary>Constructor.</summary>
-		public HeadlessConsoleMap()
+        /// <summary>Constructor.</summary>
+        public HeadlessConsoleMap()
 		{
-			_terminalThread = new Thread(HandleTerminal);
+			_terminalThread = new Thread(TerminalSetup);
 			_command = new StringBuilder(70);
 			_bag = new ConcurrentQueue<ConsoleLog>();
+			_commandHistory = new List<string>();
+			_blinkPromptLen = BlinkPrompt.Length;
+			_blinkPromptEmpty = new string(' ', BlinkPrompt.Length);
+			_blinkTime = 0.0f;
+			_commandHistoryIndex = -1;
 		}
 
 		#region Methods
@@ -66,7 +83,8 @@ namespace Journal
 		/// <inheritdoc/>
 		public void ClearLogs()
 		{
-			throw new System.NotImplementedException();
+			if (!_clearRequest)
+				_clearRequest = true;
 		}
 
 		/// <inheritdoc/>
@@ -96,6 +114,42 @@ namespace Journal
 				Debug.LogWarning("Journal cannot work. Programs text output or input is not going through terminal/console. Disabling.");
 				return;
 			}
+			if (activate && !_active)
+			{
+				_terminalThread.Start();
+				Scripting.Update += OnUpdate;
+			}
+			else
+			{
+				Scripting.Update -= OnUpdate;
+				if (_terminalThread.IsAlive)
+					_terminalThread.Join();
+			}
+
+			_active = activate;
+			
+		}
+
+		private void OnUpdate()
+		{
+			_blinkTime += Time.DeltaTime;
+			if (_blinkTime > 2.0f)
+				_blinkTime -= 2.0f;
+
+			// Would use JobSystem but I want to preserve compability with Flax 1.0
+			if (!_terminalThread.IsAlive && _active)
+			{
+				_terminalThread = new Thread(HandleTerminal);
+				_terminalThread.Start();
+			}
+		}
+
+		// Runing only once to test the console capabilities
+		private void TerminalSetup()
+		{
+			// TODO: Split Windows, Linux and Mac terminal capability check, with Linux and Mac having "terminfo" read mechanic.
+			//       If I will have more time maybe ditch System.Console and go for directly outputing strings to terminal, preparing
+			//       whole str through "HandleTerminal" and sending it at the end for perfect console handling on unix-like tty's
 			try
 			{
 				Console.Clear();
@@ -107,18 +161,17 @@ namespace Journal
 			}
 			catch (Exception)
 			{
+				// if set doesnt work then get wont help much so we disable both of them
 				_terminalCursorSet = false;
 				_terminalCursorGet = false;
 			}
 			try
 			{
 				_terminalSizeGet = Console.WindowHeight > 0;
-				
 			}
 			catch (Exception)
 			{
-				_terminalCursorSet = false;
-				_terminalCursorGet = false;
+				_terminalSizeGet = false;
 			}
 			try
 			{
@@ -132,41 +185,20 @@ namespace Journal
 			{
 				_terminalColorSupport = false;
 			}
-			if (activate)
-			{
-				Scripting.Update += OnUpdate;
-			}
-			else
-			{
-				Scripting.Update -= OnUpdate;
-				if (_terminalThread.IsAlive)
-					_terminalThread.Join();
-			}
-
-			_active = activate;
-			
-			string[] data = new string[] {
-				"CursorSet: " + _terminalCursorSet,
-				"CursorGet: " + _terminalCursorGet,
-				"ColorSupport: " + _terminalColorSupport,
-				"SizeGet: " + _terminalSizeGet
-			};
-			Console.WriteLine(string.Join(',', data));
-		}
-
-		private void OnUpdate()
-		{
-			// Would use JobSystem but I want to preserve compability with Flax 1.0
-			if (!_terminalThread.IsAlive && _active)
-			{
-				_terminalThread = new Thread(HandleTerminal);
-				_terminalThread.Start();
-			}
+			InputRestore();
 		}
 
 		// Here we handle terminal, this should not be on any of Flax's main threads to not throttle them.
 		private void HandleTerminal()
 		{
+			// Clear Request
+			if (_clearRequest)
+			{
+				_clearRequest = false;
+				Console.Clear();
+				BlinkRefresh(true);
+			}
+
 			// Input saving
 			var wasEmpty = _bag.IsEmpty;
 			if (!wasEmpty) // If there are outputs then we run 
@@ -188,18 +220,65 @@ namespace Journal
 			{
 				var keyInfo = Console.ReadKey(true);
 				var chr = keyInfo.KeyChar;
+				int newPos;
+				char[] buffer;
+
 				switch (keyInfo.Key)
 				{
-					// TODO: selecting historic command
-					case ConsoleKey.UpArrow: break;
-					case ConsoleKey.DownArrow: break;
-					// TODO: hint select systemx
-					case ConsoleKey.Tab: break;
+					// Moving in the input line
+					case ConsoleKey.RightArrow:
+					case ConsoleKey.LeftArrow:
+						if (!IsCursorGetSet)
+							break;
+						_commandCursorPos += keyInfo.Key == ConsoleKey.LeftArrow ? -1 : 1;
+						newPos = Math.Clamp(_commandCursorPos, 0,  CurrentInputLenght);
+						if (_commandCursorPos != newPos)
+							_commandCursorPos = newPos; // Out of range
+						else 
+							Console.SetCursorPosition(newPos + _blinkPromptLen, Console.GetCursorPosition().Item2);
+						break;
+					
+					// Moving through historic commands
+					case ConsoleKey.UpArrow: 
+						if (_commandHistoryIndex == 0) // Oldest command reached
+							break;
+						InputStash();
+						_commandHistoryIndex = !IsInputHistoric
+							? _commandHistory.Count - 1
+							: _commandHistoryIndex - 1;
+						InputRestore();
+						break;
+					case ConsoleKey.DownArrow:
+						if (!IsInputHistoric) // Current command reached
+							break;
+						InputStash();	
+						_commandHistoryIndex =_commandHistoryIndex < _commandHistory.Count - 1
+							? _commandHistoryIndex + 1
+							: -1;
+						InputRestore();
+						break;
+					case ConsoleKey.Tab: break; // TODO: Hints
 					case ConsoleKey.Enter:
-						// TODO: confirming use of selected historic command
+						if (IsInputHistoric) // Confirming use of selected historic command
+						{
+							_command.Clear();
+							_command.Append(_commandHistory[_commandHistoryIndex]);
+							_commandHistoryIndex = -1;
+						}
+
+						// If is new command
+						var commandString = _command.ToString().TrimEnd();
+						if (_commandHistory.Count == 0 || _commandHistory[_commandHistory.Count-1] != commandString)
+							_commandHistory.Add(commandString);
+
 						try
 						{
-							ConsoleTools.SeparateCommandAndArgs(_command.ToString(), out var command, out var args);
+							// This was we skip "Debug.Logger.LogHandler.SendLog" event firing and dont create feedback loop.
+							// It goes to C++ part, so file logger mostly.
+							Debug.Logger.LogHandler.LogWrite(LogType.Info, "> " + commandString);
+
+							ConsoleTools.SeparateCommandAndArgs(commandString, out var command, out var args);
+							BlinkRefresh(true);
 							Console.WriteLine(); // Because command text is written already, we just jump to new line
 							_command.Clear();
 							InputRestore(); // We restore input to nothing
@@ -207,42 +286,141 @@ namespace Journal
 						}
 						catch (Exception ex)
 						{
-							// Error while parsing command, we stash it (reset lines) and write error, then restore
+							// Error while parsing command, we stash it (reset input line) and write error, then restore
 							InputStash();
 							WriteLogTerminal(new ConsoleLog(ex.Message, LogType.Warning));
 							InputRestore();
 						}
 						break;
 					case ConsoleKey.Backspace:
+						// Here backspace is handled, trying here cleanly deleting char,
+						// TODO: Implementing "Delete" ConsoleKey.
 						if (_command.Length == 0)
 							break;
-						_command.Length -= 1;
+						if (IsCursorGetSet && _commandCursorPos < _command.Length)
+						{
+							_commandCursorPos--;
+							newPos = _command.Length - _commandCursorPos;
+							buffer = new char[newPos + 3];
+							buffer[0] = '\b';
+							buffer[1] = ' ';
+							buffer[2] = '\b';
+							buffer[newPos + 2] = ' '; // So the last char will not be left hanging in console
+							_command.Remove(_commandCursorPos, 1);
+							_command.CopyTo(_commandCursorPos, buffer, 3, newPos - 1);
+							Console.Write(buffer);
+							Console.SetCursorPosition(_commandCursorPos + _blinkPromptLen, Console.GetCursorPosition().Item2);
+							break;
+						}
 						Console.Write("\b \b");
+						_command.Length -= 1;
+						_commandCursorPos--;
 						break;
 					default:
 						if (char.IsControl(chr))
 							break;
-						_command.Append(chr);
-						Console.Write(chr);
+						if (IsInputHistoric) // Confirming use of selected historic command
+						{
+							_command.Clear();
+							_command.Append(_commandHistory[_commandHistoryIndex]);
+							_commandHistoryIndex = -1;
+							_refreshInput = true; 
+						}
+
+						if (_commandCursorPos == _command.Length)
+						{
+							// Simple char append
+							_command.Append(chr);
+							if (!_refreshInput)
+								Console.Write(chr);
+						}
+						else 
+						{
+							_command.Insert(_commandCursorPos, chr);
+							_refreshInput = true; 
+							// We do an whole input refresh instead of moving & rewriting in console text,
+							// because if someone pastes long string then we do rewrite for each char.
+						}
 						_commandCursorPos++;
 						break;
 				};
+			}
+			
+			if (_blinkCurrentlyDisplayed == _blinkTime > 1.0f)
+			{
+				_blinkCurrentlyDisplayed = !_blinkCurrentlyDisplayed;
+				BlinkRefresh();
+			}
+
+			// If true then input should be refreshed at the end so it displays properly
+			if (_refreshInput)
+			{
+				InputStash();
+				InputRestore();
 			}
 		}
 
 		// We restore input to the line in the way it was previously displayed
 		private void InputRestore()
 		{
-			_commandCursorPos = _command.Length;
-			Console.Write(_command.ToString());
+			if (_blinkTime > 1.0f)
+				_blinkCurrentlyDisplayed = false;
+			WriteBlinkCursor();
+			Console.Write(CurrentInput);
+			if (IsCursorGetSet && _command.Length != _commandCursorPos && !IsInputHistoric)
+			{
+				_commandCursorPos = Math.Min(CurrentInputLenght, _commandCursorPos); // Just so it is correct
+				Console.SetCursorPosition(_commandCursorPos + _blinkPromptLen, Console.GetCursorPosition().Item2);
+			}
+			else _commandCursorPos = CurrentInputLenght;
+			_refreshInput = false;
 		}
 
 		// Here we try to get rid of input line, so the incoming log wont be missplaced
 		private void InputStash()
 		{
+			if (IsCursorGetSet)
+			{
+				// Incoming log or input replacement might be shorter than input so we fix that by overwriting its content with spaces.
+				ValueTuple<int,int> curPos = Console.GetCursorPosition();
+				Console.SetCursorPosition(0, curPos.Item2);
+				Console.Write(new string(' ',  CurrentInputLenght + _blinkPromptLen));
+			}
 			Console.Write('\r');
-			_commandCursorPos = 0;
 		}
+
+		private void BlinkRefresh(bool forceShow = false)
+		{
+			if (IsCursorGetSet)
+			{
+				ValueTuple<int,int> curPos = Console.GetCursorPosition();
+				Console.SetCursorPosition(0, curPos.Item2);
+				WriteBlinkCursor(forceShow);
+				Console.SetCursorPosition(curPos.Item1, curPos.Item2);
+				return;
+			}
+			// This method might flicker in some circumstances
+			InputStash();
+			InputRestore();
+		}
+
+		// Only run when cursor at beggining
+		private void WriteBlinkCursor(bool forceShow = false)
+		{
+			if (_terminalColorSupport)
+			{
+				Console.ForegroundColor = ConsoleColor.Cyan;
+				Console.Write(BlinkString(forceShow));
+				Console.ForegroundColor = _commandHistoryIndex < 0 ? ConsoleColor.White : ConsoleColor.DarkBlue;
+			}
+			else Console.Write(BlinkString(forceShow));
+		}
+
+		// If cursor pos can be set arrow blink will occur (good to have it to see if main flax thread freezed)
+		private string BlinkString(bool forceShow = false) =>
+			(!forceShow && IsCursorGetSet && _blinkTime > 1.0f)
+				? _blinkPromptEmpty
+				: BlinkPrompt;
 
 		// This can be called thread-safe, not overlaping way, but in case of FATAL log we better print it asap!
 		private void WriteLogTerminal(ConsoleLog log)
